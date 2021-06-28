@@ -3,6 +3,7 @@ using BrowserInterop;
 using BrowserInterop.Extensions;
 using IntervalTree;
 using Microsoft.JSInterop;
+using PicatBlazorMonaco.Ast;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,18 +50,16 @@ namespace Ast2
         {
             return new StandaloneEditorConstructionOptions
             {
-                Language = "projectional",
+                Language = "picat",
+                Theme = "picatTheme",
                 InsertSpaces = true,
                 FormatOnPaste = true,
                 FormatOnType = true,
-                DetectIndentation = false,
+                DetectIndentation = true,
                 TabSize = 4,
                 GlyphMargin = true,
                 Minimap = new EditorMinimapOptions { Enabled = false },
-                RenderWhitespace = "all",
-                // CursorStyle = "underline",
-                Value = "<initial state>",
-                WordBasedSuggestions = false
+                Value = Examples.Utils
             };
         }
 

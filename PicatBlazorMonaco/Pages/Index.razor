@@ -1,21 +1,9 @@
 ﻿@page "/{ExampleNumber:int?}"
 
-<div>
-    <div style="margin:10px 0;">
-        Theme:
-        <select @onchange="ChangeTheme">
-            <option value="vs">Visual Studio</option>
-            <option value="vs-dark">Visual Studio Dark</option>
-            <option value="hc-black">High Contrast Black</option>
-        </select>
-    </div>
-</div>
-
 <MonacoEditor @ref="_editor"
               Id="sample-code-editor-123"
               ConstructionOptions="EditorConstructionOptions"
-              OnDidInit="EditorOnDidInit"
-              OnContextMenu="OnContextMenu"/>
+              OnDidInit="EditorOnDidInit"/>
 
 @using Ast2
 @code {
@@ -37,22 +25,5 @@
     {
         this._astEditor = new Ast2Editor(_editor, _jsRuntime);
         await this._astEditor.Init();
-    }
-
-    private async Task OnMouseMove(EditorMouseEvent eventArg)
-    {
-        // TODO: implement highlighting
-        // Console.WriteLine("Target : " + System.Text.Json.JsonSerializer.Serialize(eventArg.Target));
-    }
-
-    private async Task OnContextMenu(EditorMouseEvent eventArg)
-    {
-        Console.WriteLine("OnContextMenu : " + System.Text.Json.JsonSerializer.Serialize(eventArg));
-    }
-
-    private async Task ChangeTheme(ChangeEventArgs e)
-    {
-        Console.WriteLine($"setting theme to: {e.Value.ToString()}");
-        await MonacoEditor.SetTheme(e.Value.ToString());
     }
 }
