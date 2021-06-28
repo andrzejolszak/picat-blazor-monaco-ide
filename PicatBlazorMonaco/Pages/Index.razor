@@ -1,0 +1,130 @@
+﻿@page "/{ExampleNumber:int?}"
+
+<div>
+    <div style="margin:10px 0;">
+        Theme:
+        <select @onchange="ChangeTheme">
+            <option value="vs">Visual Studio</option>
+            <option value="vs-dark">Visual Studio Dark</option>
+            <option value="hc-black">High Contrast Black</option>
+        </select>
+    </div>
+    <div style="margin:10px 0;">
+        <button @onclick="ForceRefresh">Force refresh</button>
+    </div>
+</div>
+
+<MonacoEditor @ref="_editor"
+              Id="sample-code-editor-123"
+              ConstructionOptions="EditorConstructionOptions"
+              OnDidInit="EditorOnDidInit"
+              OnContextMenu="OnContextMenu"
+              OnMouseDown="OnMouseDown"
+              OnMouseMove="OnMouseMove"
+              OnKeyDown="OnKeyDown"
+              OnKeyUp="OnKeyUp"
+              OnDidChangeCursorPosition="OnCursorPositionChanged"
+              OnDidChangeModelContent="OnModelContentChanged" />
+
+@using Ast2
+@code {
+    private Ast2Editor _astEditor { get; set; }
+    private MonacoEditor _editor { get; set; }
+    [Inject] IJSRuntime _jsRuntime { get; set; }
+
+    [Parameter]
+    public int ExampleNumber { get; set; }
+
+    private string ValueToSet { get; set; }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+    {
+        return Ast2Editor.GetEditorOptions();
+    }
+
+    private async Task EditorOnDidInit(MonacoEditorBase editor)
+    {
+        this._astEditor = new Ast2Editor(_editor, _jsRuntime);
+        await this._astEditor.Init();
+
+        this._astEditor.SetRoot(new Node());
+        if (ExampleNumber == 0)
+        {
+            foreach (Action<Node, Ast2Editor> b in Tutorial.Builders)
+            {
+                b.Invoke(this._astEditor.Root, this._astEditor);
+                this._astEditor.Root.AddChild(ReadOnlyTextNode.NewLine()).AddChild(ReadOnlyTextNode.NewLine());
+            }
+        }
+        else
+        {
+            await this._astEditor.ConsoleLog("Loading: " + ExampleNumber);
+            Tutorial.Builders[ExampleNumber - 1].Invoke(this._astEditor.Root, this._astEditor);
+        }
+
+        await this._astEditor.HandleUserInputResult(UserInputResult.HandledNeedsGlobalRefresh());
+    }
+
+    private async Task OnCursorPositionChanged(CursorPositionChangedEvent eventArg)
+    {
+        if (eventArg.Source == "snippet")
+        {
+            TextModel m = await _editor.GetModel();
+            const int guidLength = 36;
+            BlazorMonaco.Range range = new BlazorMonaco.Range(eventArg.Position.LineNumber, eventArg.Position.Column - guidLength, eventArg.Position.LineNumber, eventArg.Position.Column);
+            string completionId = await m.GetValueInRange(range, EndOfLinePreference.TextDefined);
+            await this._astEditor.OnAstCompletionSelected(completionId);
+            return;
+        }
+
+        await this._astEditor.OnPositionChanged(eventArg);
+    }
+
+    private async Task OnModelContentChanged(ModelContentChangedEvent eventArg)
+    {
+        // Use this instead of overriding commands for letters.
+        // RangeLength = 0 for inserts. <>0 for deletes
+        await this._astEditor.OnTextTyped(eventArg);
+    }
+
+
+    private async Task OnMouseDown(EditorMouseEvent eventArg)
+    {
+        // Point to position
+        await this._astEditor.OnMouseDown(eventArg);
+    }
+
+    private async Task OnMouseMove(EditorMouseEvent eventArg)
+    {
+        // TODO: implement highlighting
+        // Console.WriteLine("Target : " + System.Text.Json.JsonSerializer.Serialize(eventArg.Target));
+    }
+
+    private async Task OnContextMenu(EditorMouseEvent eventArg)
+    {
+        Console.WriteLine("OnContextMenu : " + System.Text.Json.JsonSerializer.Serialize(eventArg));
+    }
+
+    private async Task OnKeyDown(KeyboardEvent eventArg)
+    {
+        // Point to position
+        await this._astEditor.OnKeyDown(eventArg);
+    }
+
+    private async Task OnKeyUp(KeyboardEvent eventArg)
+    {
+        // Point to position
+        await this._astEditor.OnKeyUp(eventArg);
+    }
+
+    private async Task ChangeTheme(ChangeEventArgs e)
+    {
+        Console.WriteLine($"setting theme to: {e.Value.ToString()}");
+        await MonacoEditor.SetTheme(e.Value.ToString());
+    }
+
+    private async Task ForceRefresh()
+    {
+        await _astEditor.RefreshWholeEditor(UserInputResult.HandledNeedsGlobalRefresh());
+    }
+}
