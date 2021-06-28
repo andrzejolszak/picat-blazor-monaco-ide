@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ProjectionalBlazorMonaco\ProjectionalBlazorMonaco.csproj" />
+    <ProjectReference Include="..\PicatBlazorMonaco\PicatBlazorMonaco.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/PicatBlazorMonaco/obj
+/Tests/obj
+/.vs/PicatBlazorMonaco/v16
+/WebApiCompiler/bin/Debug/net5.0
+/WebApiCompiler/obj
+/WebApiCompiler/requests
+/.vs/PicatBlazorMonaco/config
+/PicatBlazorMonaco/bin/Debug/net5.0
+/Tests/bin/Debug/net5.0
