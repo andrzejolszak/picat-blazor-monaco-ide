@@ -19,8 +19,6 @@ namespace Ast2
 
         private readonly IJSRuntime _jsRuntime;
 
-        private long _debugId = 0;
-
         public Ast2Editor(MonacoEditor monacoEditor, IJSRuntime jsRuntime)
         {
             this._monacoEditor = monacoEditor;
@@ -44,6 +42,7 @@ namespace Ast2
             TextModel m = await _monacoEditor.GetModel();
             await m.PushEOL(EndOfLineSequence.CRLF);
             await _jsRuntime.InvokeVoidAsync(@"initializeCompletions");
+            await RefreshCompletions();
         }
 
         public static StandaloneEditorConstructionOptions GetEditorOptions()
@@ -129,6 +128,26 @@ namespace Ast2
             decors.Add(d);
 
             return await _monacoEditor.DeltaDecorations(null, decors.ToArray());
+        }
+
+        private async Task RefreshCompletions()
+        {
+            List<object> jsCompletions = new List<object>();
+            //foreach (AstAutocompleteItem c in completions)
+            {
+
+                // Schema: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.languages.completionitem.html
+                dynamic compl = new System.Dynamic.ExpandoObject();
+                compl.label = "=>";
+                compl.insertText = "=>";
+                compl.documentation = "Important operator";
+                compl.kind = 1;
+                compl.detail = "Operator";
+
+                jsCompletions.Add(compl);
+            }
+
+            await _jsRuntime.InvokeVoidAsync(@"setCompletionsArray", jsCompletions);
         }
     }
 }
