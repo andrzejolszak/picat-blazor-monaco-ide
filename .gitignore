@@ -11,3 +11,4 @@
 /.vs/PicatBlazorMonaco/config
 /PicatBlazorMonaco/bin/Debug/net5.0
 /Tests/bin/Debug/net5.0
+/.vs

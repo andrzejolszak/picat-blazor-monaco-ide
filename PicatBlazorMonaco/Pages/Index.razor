@@ -1,29 +1,141 @@
-﻿@page "/{ExampleNumber:int?}"
+﻿@page "/"
+<label>
+    Compiler Web Service IP:
+    <input @bind="ServiceIP" />
+    <button @onclick="TestServiceConnection" style="background-color: @StatusColor">Test</button>
+</label>
+<br />
+<select @onchange="SampleSelected">
+    <option>-- samples --</option>
+    @foreach (var item in Samples)
+    {
+        <option value="@item.Item1">@item.Item1</option>
+    }
+</select>
 
 <MonacoEditor @ref="_editor"
               Id="sample-code-editor-123"
               ConstructionOptions="EditorConstructionOptions"
-              OnDidInit="EditorOnDidInit"/>
+              OnDidInit="EditorOnDidInit" />
+
+<label>
+    Goal:
+    <input @bind="Goal" style="width:800px"
+           @onkeydown="KeyPress" />
+    <button @onclick="Run">Run</button>
+</label>
+
+<textarea @bind="Output" style="width:100%;height:200px" readonly="readonly" />
 
 @using Ast2
+@using PicatBlazorMonaco.Ast
+@using System.Net
+@using System.Net.Http
+@using System.Threading.Tasks
+@using Microsoft.AspNetCore.WebUtilities;
+
+@inject HttpClient Http
+@inject NavigationManager NavManager
 @code {
+    private List<(string, string)> Samples { get; set; } = Examples.Samples;
+    private string ServiceIP { get; set; } = "localhost:8701";
+    private string StatusColor { get; set; }
+    private string Goal { get; set; } = "main.";
+    private string Output { get; set; }
     private Ast2Editor _astEditor { get; set; }
     private MonacoEditor _editor { get; set; }
     [Inject] IJSRuntime _jsRuntime { get; set; }
-
-    [Parameter]
-    public int ExampleNumber { get; set; }
 
     private string ValueToSet { get; set; }
 
     private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
     {
-        return Ast2Editor.GetEditorOptions();
+        StandaloneEditorConstructionOptions options = Ast2Editor.GetEditorOptions();
+
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("code", out var code) && !string.IsNullOrWhiteSpace(code))
+        {
+            options.Value = WebUtility.UrlDecode(code);
+        }
+        else
+        {
+            options.Value = Examples.Utils;
+        }
+
+        return options;
     }
 
     private async Task EditorOnDidInit(MonacoEditorBase editor)
     {
         this._astEditor = new Ast2Editor(_editor, _jsRuntime);
         await this._astEditor.Init();
+    }
+
+    private async Task TestServiceConnection(MouseEventArgs mouse)
+    {
+        try
+        {
+            this.Output = "Working...";
+            this.StatusColor = "gray";
+            string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal=--v");
+            this.Output = DateTime.Now.ToLongTimeString() + "\r\n" + s;
+
+            if (s.Contains("version"))
+            {
+                this.StatusColor = "green";
+            }
+            else
+            {
+                this.StatusColor = "orange";
+            }
+        }
+        catch (Exception ex)
+        {
+            this.StatusColor = "red";
+            this.Output = DateTime.Now.ToLongTimeString() + "\r\nFailed\r\n" + ex.Message;
+        }
+
+    }
+
+    private async Task Run(MouseEventArgs mouse)
+    {
+        try
+        {
+            this.Output = "Working...";
+            this.StatusColor = "gray";
+
+            string program = await _editor.GetValue();
+            program = WebUtility.UrlEncode(program);
+
+            string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal={WebUtility.UrlEncode(Goal.Trim())}&program={program}");
+            this.Output = DateTime.Now.ToLongTimeString() + "\r\n" + s;
+            this.StatusColor = "green";
+        }
+        catch (Exception ex)
+        {
+            this.StatusColor = "red";
+            this.Output = DateTime.Now.ToLongTimeString() + "\r\nFailed\r\n" + ex.Message;
+        }
+    }
+
+    private async Task KeyPress(KeyboardEventArgs keyboard)
+    {
+        if (keyboard.Key != "Enter")
+        {
+            return;
+        }
+
+        await this.Run(null);
+    }
+
+    private async Task SampleSelected(ChangeEventArgs ev)
+    {
+        string selection = ev.Value.ToString();
+        string code = this.Samples.SingleOrDefault(x => x.Item1 == selection).Item2;
+
+        if (code != null)
+        {
+            await this._editor.SetValue(code);
+        }
     }
 }

@@ -1,12 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace PicatBlazorMonaco.Ast
 {
     public class Examples
     {
+        public static List<(string, string)> Samples = new List<(string, string)> 
+        { 
+            ("About this editor", About),
+            ("Custom links to this editor", "Insert your code as UrlEncoded value of the 'code' parameter like in the below example:\r\nhttps://localhost:5001?code=foo+%3D%3E+bar.%0D%0Abar+%3D%3E+println(hello)."),
+        };
+
+        public const string About = @"Welcome";
+
         public const string Utils = @"/* Several examples in Picat 
 */
 /**** begin file exs.pi 

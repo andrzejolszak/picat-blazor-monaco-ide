@@ -4,11 +4,13 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Cors;
 
 namespace WebApi.Controllers
 {
     [Route("/")]
     [ApiController]
+    [EnableCors]
     public class ValuesController : ControllerBase
     {
         // requires using Microsoft.Extensions.Configuration;
@@ -19,11 +21,12 @@ namespace WebApi.Controllers
             Configuration = configuration;
         }
 
-        public ActionResult<string> Get(int mode, string program)
+        [HttpGet]
+        [EnableCors]
+        public string Get(string goal, string program)
         {
             string executable = this.Configuration["Executable"];
             int timeoutSec = int.Parse(this.Configuration["TimeoutSeconds"]);
-            program = WebUtility.UrlDecode(program);
 
             string sender = "s" + HttpContext.Connection.Id.ToString();
             string fileName = @".\requests\" + sender + ".pi";
@@ -42,22 +45,23 @@ namespace WebApi.Controllers
                 }
             };
             
-            if (mode == 1)
+            if (goal == "--v")
+            {
+                process.StartInfo.Arguments = "--v";
+            }
+            else if (goal == "--c")
             {
                 process.StartInfo.Arguments = $"-g compile({sender}) " + fileName;
             }
-            else if (mode == 2)
-            {
-                process.StartInfo.Arguments = "-g main " + fileName;
-            }
             else
             {
-                throw new InvalidOperationException("Wrong mode " + mode);
+                process.StartInfo.Arguments = "-g " + goal + " " + fileName;
             }
 
-            string res = "";
-            process.OutputDataReceived += (_, data) => res += data.Data;
-            process.ErrorDataReceived += (_, data) => res += data.Data;
+            string error = "";
+            string output = "";
+            process.OutputDataReceived += (_, data) => error += data.Data + "\r\n";
+            process.ErrorDataReceived += (_, data) => output += data.Data + "\r\n";
             Console.WriteLine("starting");
             process.Start();
             process.BeginOutputReadLine();
@@ -71,11 +75,13 @@ namespace WebApi.Controllers
                 return $"Execution timed out after {timeoutSec}s";
             }
 
-            Console.WriteLine($"exit {exited} " + this.Configuration["status"]);
-
             System.IO.File.Delete(fileName);
 
-            return res;
+            Console.WriteLine($"exit {exited} " + this.Configuration["status"]);
+            Console.WriteLine($"Out: {output}");
+            Console.WriteLine($"Err: {error}");
+
+            return output.Replace("\r\n\r\n", "\r\n");
         }
     }
 }

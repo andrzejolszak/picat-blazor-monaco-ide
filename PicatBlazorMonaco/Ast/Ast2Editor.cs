@@ -58,7 +58,6 @@ namespace Ast2
                 TabSize = 4,
                 GlyphMargin = true,
                 Minimap = new EditorMinimapOptions { Enabled = false },
-                Value = Examples.Utils
             };
         }
 
