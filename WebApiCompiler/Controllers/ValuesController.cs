@@ -30,6 +30,7 @@ namespace WebApi.Controllers
 
             string sender = "s" + HttpContext.Connection.Id.ToString();
             string fileName = @".\requests\" + sender + ".pi";
+            System.IO.Directory.CreateDirectory(@".\requests\");
             System.IO.File.WriteAllText(fileName, program);
 
             using var process = new Process
