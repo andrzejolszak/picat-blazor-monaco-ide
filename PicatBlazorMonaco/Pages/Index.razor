@@ -21,7 +21,7 @@
 
 <label>
     Goal:
-    <input @bind="Goal" style="width:800px"
+    <input @bind="Goal" style="width:800px" @bind:event="oninput"
            @onkeydown="RunKeyPress" />
     <button @onclick="RunGoal">Run</button>
 </label>
