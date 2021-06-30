@@ -81,7 +81,7 @@ namespace WebApi.Controllers
             Console.WriteLine($"Out: {output}");
             Console.WriteLine($"Err: {error}");
 
-            return output.Replace("\r\n\r\n", "\r\n");
+            return output.Replace("\r\n\r\n", "\r\n") + "\r\n" + error;
         }
     }
 }

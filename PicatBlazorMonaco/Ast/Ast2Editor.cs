@@ -56,8 +56,7 @@ namespace Ast2
                 FormatOnType = true,
                 DetectIndentation = true,
                 TabSize = 4,
-                GlyphMargin = true,
-                Minimap = new EditorMinimapOptions { Enabled = false },
+                GlyphMargin = true
             };
         }
 
@@ -129,19 +128,31 @@ namespace Ast2
             return await _monacoEditor.DeltaDecorations(null, decors.ToArray());
         }
 
-        private async Task RefreshCompletions()
+        public async Task RefreshCompletions()
         {
             List<object> jsCompletions = new List<object>();
-            //foreach (AstAutocompleteItem c in completions)
+            foreach ((string, string, string) o in BuiltIns.Operators)
             {
-
                 // Schema: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.languages.completionitem.html
                 dynamic compl = new System.Dynamic.ExpandoObject();
-                compl.label = "=>";
-                compl.insertText = "=>";
-                compl.documentation = "Important operator";
-                compl.kind = 1;
-                compl.detail = "Operator";
+                compl.label = o.Item1;
+                compl.insertText = o.Item1;
+                compl.detail = o.Item2;
+                compl.documentation = o.Item3;
+                compl.kind = CompletionItemKind.Operator;
+
+                jsCompletions.Add(compl);
+            }
+
+            foreach ((string, string, string) o in BuiltIns.Functions)
+            {
+                // Schema: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.languages.completionitem.html
+                dynamic compl = new System.Dynamic.ExpandoObject();
+                compl.label = o.Item1;
+                compl.insertText = o.Item1;
+                compl.detail = o.Item2;
+                compl.documentation = o.Item3;
+                compl.kind = CompletionItemKind.Function;
 
                 jsCompletions.Add(compl);
             }

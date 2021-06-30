@@ -16,13 +16,14 @@
 <MonacoEditor @ref="_editor"
               Id="sample-code-editor-123"
               ConstructionOptions="EditorConstructionOptions"
-              OnDidInit="EditorOnDidInit" />
+              OnDidInit="EditorOnDidInit"
+              OnKeyDown="OnKeyDown"/>
 
 <label>
     Goal:
     <input @bind="Goal" style="width:800px"
-           @onkeydown="KeyPress" />
-    <button @onclick="Run">Run</button>
+           @onkeydown="RunKeyPress" />
+    <button @onclick="RunGoal">Run</button>
 </label>
 
 <textarea @bind="Output" style="width:100%;height:200px" readonly="readonly" />
@@ -69,6 +70,15 @@
     {
         this._astEditor = new Ast2Editor(_editor, _jsRuntime);
         await this._astEditor.Init();
+
+        await _editor.AddAction("runSnippet", "Run selected snippet", new[] { (int)KeyMode.CtrlCmd | (int)KeyCode.KEY_R }, null, null, "_picat", 1, async (x, y) =>
+        {
+            TextModel m = await this._editor.GetModel();
+            Selection s = await this._editor.GetSelection();
+            string val = await m.GetValueInRange(s, EndOfLinePreference.TextDefined);
+            this.Goal = val;
+            await this.RunGoal(null);
+        });
     }
 
     private async Task TestServiceConnection(MouseEventArgs mouse)
@@ -77,6 +87,8 @@
         {
             this.Output = "Working...";
             this.StatusColor = "gray";
+            await InvokeAsync(StateHasChanged);
+
             string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal=--v");
             this.Output = DateTime.Now.ToLongTimeString() + "\r\n" + s;
 
@@ -94,21 +106,27 @@
             this.StatusColor = "red";
             this.Output = DateTime.Now.ToLongTimeString() + "\r\nFailed\r\n" + ex.Message;
         }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
 
+        }
     }
 
-    private async Task Run(MouseEventArgs mouse)
+    private async Task RunGoal(MouseEventArgs mouse)
     {
         try
         {
             this.Output = "Working...";
             this.StatusColor = "gray";
+            await InvokeAsync(StateHasChanged);
 
             string program = await _editor.GetValue();
             program = WebUtility.UrlEncode(program);
+            string goal = Goal.Trim();
 
-            string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal={WebUtility.UrlEncode(Goal.Trim())}&program={program}");
-            this.Output = DateTime.Now.ToLongTimeString() + "\r\n" + s;
+            string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal={WebUtility.UrlEncode(goal)}&program={program}");
+            this.Output = DateTime.Now.ToLongTimeString() + "\r\nPicat> " + goal + "\r\n" + s;
             this.StatusColor = "green";
         }
         catch (Exception ex)
@@ -116,16 +134,30 @@
             this.StatusColor = "red";
             this.Output = DateTime.Now.ToLongTimeString() + "\r\nFailed\r\n" + ex.Message;
         }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
-    private async Task KeyPress(KeyboardEventArgs keyboard)
+
+    private async Task OnKeyDown(KeyboardEvent keyboard)
+    {
+
+        if (keyboard.CtrlKey && keyboard.KeyCode == KeyCode.Space)
+        {
+            await this._astEditor.RefreshCompletions();
+        }
+    }
+
+    private async Task RunKeyPress(KeyboardEventArgs keyboard)
     {
         if (keyboard.Key != "Enter")
         {
             return;
         }
 
-        await this.Run(null);
+        await this.RunGoal(null);
     }
 
     private async Task SampleSelected(ChangeEventArgs ev)
