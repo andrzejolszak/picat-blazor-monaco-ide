@@ -3,6 +3,8 @@ Web IDE for the Picat programming language based on Blazor and Monaco
 
 This editor aims to aid in learning Picat syntax and editing Picat programs.
 
+![](demo.gif)
+
 Some of the features provided by the editor:
 - Syntax highlighting
 - Code completion with documentation for the built-in APIs (CTRL+Space)
