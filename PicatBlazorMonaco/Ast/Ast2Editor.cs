@@ -137,7 +137,7 @@ namespace Ast2
                 dynamic compl = new System.Dynamic.ExpandoObject();
                 compl.label = o.Item1;
                 compl.insertText = o.Item1;
-                compl.detail = o.Item2;
+                compl.detail = "[" + o.Item2 + "]";
                 compl.documentation = o.Item3;
                 compl.kind = CompletionItemKind.Operator;
 
@@ -150,7 +150,7 @@ namespace Ast2
                 dynamic compl = new System.Dynamic.ExpandoObject();
                 compl.label = o.Item1;
                 compl.insertText = o.Item1;
-                compl.detail = o.Item2;
+                compl.detail = "[" + o.Item2 + "]";
                 compl.documentation = o.Item3;
                 compl.kind = CompletionItemKind.Function;
 

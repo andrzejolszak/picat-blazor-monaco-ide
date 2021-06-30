@@ -24,9 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Ast\builtins.txt">
+    <Content Update="wwwroot\builtins.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
 </Project>

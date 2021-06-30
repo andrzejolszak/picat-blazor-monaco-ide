@@ -38,6 +38,7 @@
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @code {
+    private bool _initializedSuggestionDetail = false;
     private List<(string, string)> Samples { get; set; } = Examples.Samples;
     private string ServiceIP { get; set; } = "localhost:8701";
     private string StatusColor { get; set; }
@@ -68,6 +69,9 @@
 
     private async Task EditorOnDidInit(MonacoEditorBase editor)
     {
+        string builtins = await Http.GetStringAsync("builtins.txt");
+        BuiltIns.InitializeFunctions(builtins);
+
         this._astEditor = new Ast2Editor(_editor, _jsRuntime);
         await this._astEditor.Init();
 
@@ -147,6 +151,15 @@
         if (keyboard.CtrlKey && keyboard.KeyCode == KeyCode.Space)
         {
             await this._astEditor.RefreshCompletions();
+        }
+
+        if (!_initializedSuggestionDetail)
+        {
+            _initializedSuggestionDetail = true;
+            await Task.Delay(1000);
+            using JsonDocument doc2 = JsonDocument.Parse(@"{}");
+            JsonElement root2 = doc2.RootElement;
+            await _editor.Trigger("api", "toggleSuggestionDetails", root2);
         }
     }
 

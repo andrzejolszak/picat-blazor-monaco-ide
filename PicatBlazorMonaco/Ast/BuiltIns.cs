@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -55,25 +56,57 @@ namespace PicatBlazorMonaco.Ast
             ("<from> .. <to>", "Arithmetic", "A range (list) of numbers with a step 1"),
         };
 
-        public static List<(string, string, string)> Functions = new List<(string, string, string)>
+        public static List<(string, string, string)> Functions = new List<(string, string, string)>(100);
+
+        public static void InitializeFunctions(string data)
         {
-            ("copy_term(Term1)", "System", "copy_term(Term1) = Term2: This function copies Term1 into Term2. If Term1 is an attributed variable, then Term2 will not contain any of the attributes."),
-            ("copy_term_shallow(Term1)", "System", "copy_term_shallow(Term1) = Term2: This function copies the skeleton of Term1 into Term2. If Term1 is a variable or an atomic value, then it returns a complete copy of Term1, the same as copy_term(Term1); if Term1 is a list, then it returns a cons [H|T] where both the car H and the cdr T are free variables; otherwise, it is the same as new_struct(name(Term1),arity(Term1))."),
-            ("hash_code(Term)", "System", "hash_code(Term) = Code: This function returns the hash code of Term. If Term is a variable, then the returned hash code is always 0."),
-            ("to_codes(Term)", "System", "to_codes(Term) = Codes: This function returns a list of character codes of Term."),
-            ("to_fstring(Format,Args…)", "System", "to_fstring(Format,Args…): This function converts the arguments in the Args… parameter into a string, according to the format string Format, and returns the string. The number of arguments in Args… cannot exceed 10."),
-            ("to_string(Term)", "System", "to_string(Term) = String: This function returns a string representation of Term."),
-            ("var(Term)", "System", "var(Term): This predicate is true if Term is a free variable."),
-            ("nonvar(Term)", "System", "nonvar(Term): This predicate is true if Term is not a free variable."),
-            ("attr_var(Term)", "Attributed Vars", "attr_var(Term): This predicate is true if Term is an attributed variable."),
-            ("nonvar(Term)", "Attributed Vars", "nonvar(Term): This predicate is true if Term is not a free variable."),
-            ("nonvar(Term)", "Attributed Vars", "dvar(Term): This predicate is true if Term is an attributed domain variable."),
-            ("nonvar(Term)", "Attributed Vars", "bool_dvar(Term): This predicate is true if Term is an attributed domain variable whose lower bound is 0 and whose upper bound is 1."),
-            ("nonvar(Term)", "Attributed Vars", "dvar_or_int(Term): This predicate is true if Term is an attributed domain variable or an integer."),
-            ("nonvar(Term)", "Attributed Vars", "get_attr(X,Key) = Val: This function returns the Val of the key-value pair Key=V al that is attached to X. It throws an error if X has no attribute named Key."),
-            ("nonvar(Term)", "Attributed Vars", "get_attr(X,Key,DefaultVal) = Val: This function returns Val of the key-value pair Key=V al that is attached to X. It returns DefaultV al if X does not have the attribute named Key."),
-            ("nonvar(Term)", "Attributed Vars", "put_attr(X,Key,V al): This predicate attaches the key-value pair Key=V al to X, where Key is a non-variable term, and V al is any term."),
-            ("nonvar(Term)", "Attributed Vars", "put_attr(X,Key): This predicate call is the same as put_attr(X,Key,not_a_value)."),
-        };
+            Functions.Clear();
+            string[] lines = data.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            string module = null;
+            string entry = string.Empty;
+            foreach (string line in lines)
+            {
+                if (module != null && entry != string.Empty && line[0] != ' ')
+                {
+                    string name = entry;
+                    int closeBracketIndex = entry.IndexOf(')');
+                    int colonIndex = entry.IndexOf(':');
+                    if (closeBracketIndex > 0)
+                    {
+                        name = name.Substring(0, closeBracketIndex + 1);
+                    }
+                    else if (colonIndex > 0)
+                    {
+                        name = name.Substring(0, colonIndex);
+                    }
+
+                    if (colonIndex > 0)
+                    {
+                        entry = entry.Insert(colonIndex + 2, "\r\n");
+                    }
+
+                    Functions.Add((name, module, entry));
+                    entry = string.Empty;
+                }
+
+                if (line == "-----")
+                {
+                    module = null;
+                }
+                else if (module == null)
+                {
+                    module = line.Trim();
+                }
+                else
+                {
+                    if (line[0] == ' ')
+                    {
+                        entry += "\r\n";
+                    }
+
+                    entry += line;
+                }
+            }
+        }
     }
 }
