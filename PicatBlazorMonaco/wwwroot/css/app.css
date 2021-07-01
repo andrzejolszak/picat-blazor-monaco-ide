@@ -61,3 +61,7 @@ a, .btn-link {
 .decorationContentClass {
     background: lightblue;
 }
+
+.underline {
+    text-decoration: underline;
+}

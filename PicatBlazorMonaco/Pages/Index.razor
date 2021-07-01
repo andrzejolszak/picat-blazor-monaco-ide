@@ -26,7 +26,7 @@
     <button @onclick="RunGoal">Run</button>
 </label>
 
-<textarea @bind="Output" style="width:100%;height:200px" readonly="readonly" />
+<textarea @bind="Output" @ref="outputElement" @ondblclick="OutputDoubleClick" style="width:100%;height:200px" readonly="readonly" />
 
 @using Ast2
 @using PicatBlazorMonaco.Ast
@@ -38,6 +38,7 @@
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @code {
+    public ElementReference outputElement { get; set; }
     private bool _initializedSuggestionDetail = false;
     private List<(string, string)> Samples { get; set; } = Examples.Samples;
     private string ServiceIP { get; set; } = "localhost:8701";
@@ -128,6 +129,7 @@
             string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal={WebUtility.UrlEncode(goal)}&program={program}");
             this.Output = DateTime.Now.ToLongTimeString() + "\r\nPicat> " + goal + "\r\n" + s;
             this.StatusColor = "green";
+            await this._astEditor.UpdateErrors(s);
         }
         catch (Exception ex)
         {
@@ -178,5 +180,13 @@
         {
             await this._editor.SetValue(code);
         }
+    }
+
+    private async Task OutputDoubleClick(MouseEventArgs mouse)
+    {
+        int pos = await _astEditor.GetSelectionStart(this.outputElement);
+        var lineIndex = this.Output.Take(pos).Count(c => c == '\n');
+        string[] lines = this.Output.Split("\n");
+        await _astEditor.MoveToError(lines[lineIndex]);
     }
 }

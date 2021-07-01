@@ -2,6 +2,7 @@
 using BrowserInterop;
 using BrowserInterop.Extensions;
 using IntervalTree;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using PicatBlazorMonaco.Ast;
 using System;
@@ -18,6 +19,8 @@ namespace Ast2
         private readonly MonacoEditor _monacoEditor;
 
         private readonly IJSRuntime _jsRuntime;
+
+        private string[] _currentErrors;
 
         public Ast2Editor(MonacoEditor monacoEditor, IJSRuntime jsRuntime)
         {
@@ -102,30 +105,75 @@ namespace Ast2
             return await model.GetPositionAt(offset);
         }
 
-        private async Task<string[]> SetStyleForRange(int min, int max, ModelDecorationOptions selectedParentNodeText, string hoverMessage)
-        {
-            List<ModelDeltaDecoration> decors = new List<ModelDeltaDecoration>(1);
-            Position startPos = await this.GetPositionAt(min);
-            Position endPos = await this.GetPositionAt(max);
-            ModelDeltaDecoration d = new ModelDeltaDecoration
-            {
-                Range = new BlazorMonaco.Range { StartColumn = startPos.Column, StartLineNumber = startPos.LineNumber, EndColumn = endPos.Column, EndLineNumber = endPos.LineNumber },
-                Options = new ModelDecorationOptions
-                {
-                    InlineClassName = selectedParentNodeText.InlineClassName,
-                    Minimap = new ModelDecorationMinimapOptions { Color = "red" },
-                    OverviewRuler = new ModelDecorationOverviewRulerOptions { Color = "blue" }
-                }
-            };
 
-            if (hoverMessage != null)
+        public async Task<int> GetSelectionStart(ElementReference element)
+        {
+            int pos = await _jsRuntime.InvokeAsync<int>("getSelectedStart", element);
+            return pos;
+        }
+
+        public async Task MoveToError(string line)
+        {
+            // *** SYNTAX ERROR *** (222-228) wrong head.
+            if (line.StartsWith("*** SYNTAX ERROR *** "))
             {
-                d.Options.HoverMessage = new[] { new MarkdownString { Value = hoverMessage } };
+                int open = line.IndexOf("(");
+                int close = line.IndexOf(")");
+                if (open > 0 && close > 0 && open + 1 < close)
+                {
+                    string range = line.Substring(open + 1, close - open - 1);
+                    string[] lines = range.Split("-");
+                    if (lines.Length == 2 && int.TryParse(lines[0], out int start) && int.TryParse(lines[1], out int end) && start >= 0 && start <= end)
+                    {
+                        Position pos = new Position { LineNumber = start, Column = 1 };
+                        await SetAndRevealPosition(pos);
+                    }
+                }
+            }
+        }
+
+        public async Task UpdateErrors(string output)
+        {
+            List<(int startLine, int endLine, string hoverMessage)> errors = new List<(int startLine, int endLine, string hoverMessage)>();
+            foreach(string line in output.Split(new char[] { '\r', '\n'}, StringSplitOptions.RemoveEmptyEntries))
+            {
+                // *** SYNTAX ERROR *** (222-228) wrong head.
+                if (line.StartsWith("*** SYNTAX ERROR *** "))
+                {
+                    int open = line.IndexOf("(");
+                    int close = line.IndexOf(")");
+                    if (open > 0 && close > 0 && open + 1 < close)
+                    {
+                        string range = line.Substring(open + 1, close - open - 1);
+                        string[] lines = range.Split("-");
+                        if (lines.Length == 2 && int.TryParse(lines[0], out int start) && int.TryParse(lines[1], out int end) && start >= 0 && start <= end)
+                        {
+                            errors.Add((start, end, line));
+                        }
+                    }
+                }
             }
 
-            decors.Add(d);
+            List<ModelDeltaDecoration> decors = new List<ModelDeltaDecoration>(1);
+            foreach ((int startLine, int endLine, string hoverMessage) error in errors)
+            {
+                ModelDeltaDecoration d = new ModelDeltaDecoration
+                {
+                    Range = new BlazorMonaco.Range { StartColumn = 1, StartLineNumber = error.startLine, EndColumn = 1, EndLineNumber = error.endLine },
+                    Options = new ModelDecorationOptions
+                    {
+                        IsWholeLine = true,
+                        GlyphMarginClassName = "decorationGlyphMarginClass",
+                        GlyphMarginHoverMessage = new[] { new MarkdownString { Value = error.hoverMessage } },
+                        Minimap = new ModelDecorationMinimapOptions { Color = "red" },
+                        OverviewRuler = new ModelDecorationOverviewRulerOptions { Color = "red" }
+                    }
+                };
 
-            return await _monacoEditor.DeltaDecorations(null, decors.ToArray());
+                decors.Add(d);
+            }
+
+            this._currentErrors = await _monacoEditor.DeltaDecorations(this._currentErrors, decors.ToArray());
         }
 
         public async Task RefreshCompletions()
