@@ -1,4 +1,4 @@
-# pbm
+# picat-bm-ide
 Web IDE for the Picat programming language based on Blazor and Monaco
 
 This editor aims to aid in learning Picat syntax and editing Picat programs.
