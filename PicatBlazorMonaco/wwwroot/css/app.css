@@ -56,6 +56,8 @@ a, .btn-link {
 
 .decorationGlyphMarginClass {
     background: red;
+    width: 10px !important;
+    margin-left: 5px;
 }
 
 .decorationContentClass {
@@ -64,4 +66,15 @@ a, .btn-link {
 
 .underline {
     text-decoration: underline;
+}
+
+.referenceDecoration {
+    color: royalblue !important;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.declarationDecoration {
+    color: royalblue !important;
+    font-weight: bold;
 }

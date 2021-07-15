@@ -122,14 +122,18 @@
             this.StatusColor = "gray";
             await InvokeAsync(StateHasChanged);
 
-            string program = await _editor.GetValue();
-            program = WebUtility.UrlEncode(program);
+            string orgProgram = await _editor.GetValue();
+            string program = WebUtility.UrlEncode(orgProgram);
             string goal = Goal.Trim();
 
             string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal={WebUtility.UrlEncode(goal)}&program={program}");
             this.Output = DateTime.Now.ToLongTimeString() + "\r\nPicat> " + goal + "\r\n" + s;
             this.StatusColor = "green";
-            await this._astEditor.UpdateErrors(s);
+            int errorsCount = await this._astEditor.UpdateErrors(s);
+            if (errorsCount == 0)
+            {
+                await this._astEditor.UpdateDeclarations(orgProgram);
+            }
         }
         catch (Exception ex)
         {

@@ -17,10 +17,15 @@ namespace Ast2
     public class Ast2Editor
     {
         private readonly MonacoEditor _monacoEditor;
+        private TextModel _model;
 
         private readonly IJSRuntime _jsRuntime;
 
-        private string[] _currentErrors;
+        private string[] _currentErrorDecors;
+
+        private string[] _currentDeclarationDecors;
+
+        private List<DeclarationParser.Declaration> _currentDeclarations = new List<DeclarationParser.Declaration>();
 
         public Ast2Editor(MonacoEditor monacoEditor, IJSRuntime jsRuntime)
         {
@@ -42,8 +47,8 @@ namespace Ast2
             WindowConsole.IsEnabled = false;
 #endif
 
-            TextModel m = await _monacoEditor.GetModel();
-            await m.PushEOL(EndOfLineSequence.CRLF);
+            _model = await _monacoEditor.GetModel();
+            await _model.PushEOL(EndOfLineSequence.CRLF);
             await _jsRuntime.InvokeVoidAsync(@"initializeCompletions");
             await RefreshCompletions();
         }
@@ -83,8 +88,7 @@ namespace Ast2
         public async Task<int> GetCurrentEditorControlPositionStart()
         {
             Position p = await this._monacoEditor.GetPosition();
-            TextModel m = await this._monacoEditor.GetModel();
-            return await m.GetOffsetAt(p);
+            return await _model.GetOffsetAt(p);
         }
 
         private async Task Select(int position)
@@ -96,13 +100,12 @@ namespace Ast2
         private async Task SetAndRevealPosition(Position position)
         {
             await _monacoEditor.SetPosition(position);
-            await _monacoEditor.RevealPosition(position);
+            await _monacoEditor.RevealPositionInCenter(position);
         }
 
         private async Task<Position> GetPositionAt(int offset)
         {
-            TextModel model = await this._monacoEditor.GetModel();
-            return await model.GetPositionAt(offset);
+            return await _model.GetPositionAt(offset);
         }
 
 
@@ -132,7 +135,7 @@ namespace Ast2
             }
         }
 
-        public async Task UpdateErrors(string output)
+        public async Task<int> UpdateErrors(string output)
         {
             List<(int startLine, int endLine, string hoverMessage)> errors = new List<(int startLine, int endLine, string hoverMessage)>();
             foreach(string line in output.Split(new char[] { '\r', '\n'}, StringSplitOptions.RemoveEmptyEntries))
@@ -163,8 +166,8 @@ namespace Ast2
                     Options = new ModelDecorationOptions
                     {
                         IsWholeLine = true,
-                        GlyphMarginClassName = "decorationGlyphMarginClass",
-                        GlyphMarginHoverMessage = new[] { new MarkdownString { Value = error.hoverMessage } },
+                        LinesDecorationsClassName = "decorationGlyphMarginClass",
+                        HoverMessage = new[] { new MarkdownString { Value = error.hoverMessage } },
                         Minimap = new ModelDecorationMinimapOptions { Color = "red" },
                         OverviewRuler = new ModelDecorationOverviewRulerOptions { Color = "red" }
                     }
@@ -173,7 +176,42 @@ namespace Ast2
                 decors.Add(d);
             }
 
-            this._currentErrors = await _monacoEditor.DeltaDecorations(this._currentErrors, decors.ToArray());
+            this._currentErrorDecors = await _monacoEditor.DeltaDecorations(this._currentErrorDecors, decors.ToArray());
+
+            return errors.Count;
+        }
+
+        public async Task UpdateDeclarations(string program)
+        {
+            List<DeclarationParser.Declaration> declarations = new List<DeclarationParser.Declaration>();
+            List <ModelDeltaDecoration> decors = new List<ModelDeltaDecoration>(1);
+            try
+            {
+                declarations = DeclarationParser.Parse(program);
+                foreach (DeclarationParser.Declaration decl in declarations)
+                {
+                    Position pos = await _model.GetPositionAt(decl.NameOffset);
+                    ModelDeltaDecoration d = new ModelDeltaDecoration
+                    {
+                        Range = new BlazorMonaco.Range { StartColumn = pos.Column, StartLineNumber = pos.LineNumber, EndColumn = pos.Column + decl.Name.Length, EndLineNumber = pos.LineNumber },
+                        Options = new ModelDecorationOptions
+                        {
+                            InlineClassName = "declarationDecoration",
+                            HoverMessage = new[] { new MarkdownString { Value = decl.Name + "/" + decl.Args.Count } },
+                            Minimap = new ModelDecorationMinimapOptions { Color = "darkblue" },
+                            OverviewRuler = new ModelDecorationOverviewRulerOptions { Color = "darkblue" }
+                        }
+                    };
+
+                    decors.Add(d);
+                }
+            }
+            finally
+            {
+                this._currentDeclarationDecors = await _monacoEditor.DeltaDecorations(this._currentDeclarationDecors, decors.ToArray());
+            }
+
+            this._currentDeclarations = declarations;
         }
 
         public async Task RefreshCompletions()
@@ -194,12 +232,29 @@ namespace Ast2
 
             foreach ((string, string, string) o in BuiltIns.Functions)
             {
-                // Schema: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.languages.completionitem.html
                 dynamic compl = new System.Dynamic.ExpandoObject();
                 compl.label = o.Item1;
                 compl.insertText = o.Item1;
                 compl.detail = "[" + o.Item2 + "]";
                 compl.documentation = o.Item3;
+                compl.kind = CompletionItemKind.Function;
+
+                jsCompletions.Add(compl);
+            }
+
+            foreach (DeclarationParser.Declaration d in this._currentDeclarations)
+            {
+                string target = d.Name;
+                if (d.Args.Count > 0)
+                {
+                    target = $"{d.Name}({string.Join(", ", d.Args)})";
+                }
+
+                dynamic compl = new System.Dynamic.ExpandoObject();
+                compl.label = target;
+                compl.insertText = target;
+                compl.detail = "[User]";
+                compl.documentation = target + ":\r\n" + d.Comment;
                 compl.kind = CompletionItemKind.Function;
 
                 jsCompletions.Add(compl);
