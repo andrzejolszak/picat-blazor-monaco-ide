@@ -1,6 +1,7 @@
 ﻿using SoftCircuits.Parsing.Helper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PicatBlazorMonaco.Ast
 {
@@ -16,7 +17,13 @@ namespace PicatBlazorMonaco.Ast
             public string Body { get; set; }
         }
 
-        public static List<Declaration> Parse(string input)
+        public class Reference
+        {
+            public Declaration FirstMatch { get; set; }
+            public int NameOffset { get; set; }
+        }
+
+        public static List<Declaration> ParseDeclarations(string input)
         {
             List<Declaration> res = new List<Declaration>();
             ParsingHelper helper = new ParsingHelper(input);
@@ -47,7 +54,7 @@ namespace PicatBlazorMonaco.Ast
 
             if (char.IsWhiteSpace(helper.Peek()) || helper.Peek() == '(')
             {
-                if(current.Name == "module"
+                if (current.Name == "module"
                 || current.Name == "import")
                 {
                     helper.SkipToNextLine();
@@ -69,34 +76,7 @@ namespace PicatBlazorMonaco.Ast
 
             if (helper.Peek() == '(')
             {
-                helper++;
-                lastPos = helper.Index;
-                int nesting = 1;
-                List<string> args = new List<string>();
-                while (helper.Remaining > 0 && nesting > 0)
-                {
-                    char cc = helper.Get();
-                    if (cc == ')' || cc == ']' || cc == '}')
-                    {
-                        nesting--;
-                    }
-                    else if (cc == '(' || cc == '[' || cc == '{')
-                    {
-                        nesting++;
-                    }
-
-                    if (nesting == 0 || (nesting == 1 && cc == ','))
-                    {
-                        string arg = helper.Extract(lastPos, helper.Index - 1).Trim();
-                        if (arg != string.Empty)
-                        {
-                            args.Add(arg);
-                            lastPos = helper.Index;
-                        }
-                    }
-                }
-
-                current.Args = args;
+                current.Args = ExtractArguments(helper);
             }
 
             helper.SkipWhiteSpace();
@@ -111,6 +91,87 @@ namespace PicatBlazorMonaco.Ast
             helper++;
 
             goto start;
+        }
+
+        private static List<string> ExtractArguments(ParsingHelper helper)
+        {
+            int lastPos;
+            helper++;
+            lastPos = helper.Index;
+            int nesting = 1;
+            List<string> args = new List<string>();
+            while (helper.Remaining > 0 && nesting > 0)
+            {
+                char cc = helper.Get();
+                if (cc == ')' || cc == ']' || cc == '}')
+                {
+                    nesting--;
+                }
+                else if (cc == '(' || cc == '[' || cc == '{')
+                {
+                    nesting++;
+                }
+
+                if (nesting == 0 || (nesting == 1 && cc == ','))
+                {
+                    string arg = helper.Extract(lastPos, helper.Index - 1).Trim();
+                    if (arg != string.Empty)
+                    {
+                        args.Add(arg);
+                        lastPos = helper.Index;
+                    }
+                }
+            }
+
+            return args;
+        }
+
+        public static List<Reference> ParseReferences(string input, List<Declaration> declarations)
+        {
+            List<Reference> res = new List<Reference>();
+            IEnumerable<IGrouping<string, Declaration>> byName = declarations.GroupBy(x => x.Name);
+            HashSet<int> declarationOffsets = declarations.Select(x => x.NameOffset).ToHashSet();
+
+            ParsingHelper helper = new ParsingHelper(input);
+            foreach (IGrouping<string, Declaration> name in byName)
+            {
+                helper.Index = 0;
+                while (!helper.EndOfText)
+                {
+                    if (helper.SkipTo(name.Key))
+                    {
+                        int offset = helper.Index;
+                        if (char.IsLetter(helper.Peek(-1)))
+                        {
+                            helper.ParseCharacters(name.Key.Length);
+                            continue;
+                        }
+
+                        helper.ParseCharacters(name.Key.Length);
+                        
+                        if (declarationOffsets.Contains(offset))
+                        {
+                            continue;
+                        }
+
+                        helper.SkipWhiteSpace();
+
+                        int argsCount = 0;
+                        if (helper.Peek() == '(')
+                        {
+                            argsCount = ExtractArguments(helper).Count;
+                        }
+
+                        Declaration target = name.FirstOrDefault(x => x.Args.Count == argsCount);
+                        if (target != null)
+                        {
+                            res.Add(new Reference() { FirstMatch = target, NameOffset = offset });
+                        }
+                    }
+                }
+            }
+
+            return res;
         }
     }
 }

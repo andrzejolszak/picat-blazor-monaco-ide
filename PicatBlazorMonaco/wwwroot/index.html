@@ -166,6 +166,21 @@
                     };
                 }
             });
+
+            monaco.languages.registerDefinitionProvider('picat', {
+                provideDefinition: async (model, position, token) => {
+                    var defRange = await window.dotNetHelper.invokeMethodAsync('GetDefinitionRange');
+                    if (!defRange) {
+                        return null;
+                    }
+                    else {
+                        return {
+                            uri: model.uri,
+                            range: defRange
+                        }
+                    }
+                }
+            });
         }
 
         function setCompletionsArray(completions) {
@@ -180,6 +195,9 @@
             return element.selectionStart;
         }
 
+        function setDotNetHelper(helper) {
+            window.dotNetHelper = helper;
+        }
     </script>
 </body>
 

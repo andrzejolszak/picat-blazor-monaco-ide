@@ -187,7 +187,7 @@ namespace Ast2
             List <ModelDeltaDecoration> decors = new List<ModelDeltaDecoration>(1);
             try
             {
-                declarations = DeclarationParser.Parse(program);
+                declarations = DeclarationParser.ParseDeclarations(program);
                 foreach (DeclarationParser.Declaration decl in declarations)
                 {
                     Position pos = await _model.GetPositionAt(decl.NameOffset);
@@ -242,8 +242,14 @@ namespace Ast2
                 jsCompletions.Add(compl);
             }
 
+            DeclarationParser.Declaration prevDecl = null;
             foreach (DeclarationParser.Declaration d in this._currentDeclarations)
             {
+                if (prevDecl != null && prevDecl.Name == d.Name && prevDecl.Args.Count == d.Args.Count && d.Comment == null)
+                {
+                    continue;
+                }
+
                 string target = d.Name;
                 if (d.Args.Count > 0)
                 {

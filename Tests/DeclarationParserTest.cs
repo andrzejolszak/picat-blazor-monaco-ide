@@ -29,7 +29,7 @@ namespace Tests
         [InlineData("foo(N) = F => true.")]
         [InlineData("foo=1.")]
         [InlineData("import cp, ds.\r\nfoo=1.")]
-        [InlineData("module foo.\r\nfoo=1.")]
+        [InlineData("module bar.\r\nfoo=1.")]
         [InlineData("private\r\nfoo([],Acc,Sum) => Sum = Acc.")]
         [InlineData("index (+, -) (-,+)\nfoo(a, b).")]
         [InlineData("foo ((a,b), c).")]
@@ -45,10 +45,12 @@ foo(P, L) :-
         [Theory]
         public void Simple(string input)
         {
-            
-            List<Declaration> res = DeclarationParser.Parse(input);
+            List<Declaration> res = DeclarationParser.ParseDeclarations(input);
             res.Count.Should().Be(1);
             res.Single().Name.Should().Be("foo");
+
+            List<Reference> references = DeclarationParser.ParseReferences(input, res);
+            references.Count.Should().Be(0);
         }
 
         [InlineData("foo(a)?=>a. bar-->c.")]
@@ -59,7 +61,7 @@ foo(P, L) :-
         [Theory]
         public void SimpleMultiple(string input)
         {
-            List<Declaration> res = DeclarationParser.Parse(input);
+            List<Declaration> res = DeclarationParser.ParseDeclarations(input);
             res.Count.Should().Be(2);
             res.Single(x => x.Name == "foo");
             res.Single(x => x.Name == "bar");
@@ -68,7 +70,7 @@ foo(P, L) :-
         [Fact]
         public void Args()
         {
-            List<Declaration> res = DeclarationParser.Parse("foo(a)?=>a. bar-->c. yar. far()=>true. dar(a, b). tar({n,m,y}, 2, 3).");
+            List<Declaration> res = DeclarationParser.ParseDeclarations("foo(a)?=>a. bar-->c. yar. far()=>true. dar(a, b). tar({n,m,y}, 2, 3).");
             res.Count(x => x.Args.Count == 0).Should().Be(3);
             res.Count(x => x.Args.Count == 1).Should().Be(1);
             res.Count(x => x.Args.Count == 2).Should().Be(1);
@@ -78,8 +80,11 @@ foo(P, L) :-
         [Fact]
         public void LargeExample()
         {
-            List<Declaration> res = DeclarationParser.Parse(Examples.SeveralExamples);
+            List<Declaration> res = DeclarationParser.ParseDeclarations(Examples.SeveralExamples);
             res.Count.Should().Be(149);
+
+            List<Reference> references = DeclarationParser.ParseReferences(Examples.SeveralExamples, res);
+            references.Count.Should().Be(120);
         }
     }
 }
