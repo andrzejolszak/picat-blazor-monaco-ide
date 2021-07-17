@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using WebApi.Controllers;
 
 namespace WebApi
 {
@@ -7,6 +9,10 @@ namespace WebApi
     {
         public static void Main(string[] args)
         {
+            var conf = new ConfigurationBuilder().AddJsonFile("appSettings.json").Build();
+            new ValuesController(conf)
+                .Get("main", "main => writeln(hello_from_picat_compiler).");
+
             CreateWebHostBuilder(args)
                 .Build()
                 .Run();

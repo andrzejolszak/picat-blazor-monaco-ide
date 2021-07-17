@@ -28,7 +28,7 @@ namespace WebApi.Controllers
             string executable = this.Configuration["Executable"];
             int timeoutSec = int.Parse(this.Configuration["TimeoutSeconds"]);
 
-            string sender = "s" + HttpContext.Connection.Id.ToString();
+            string sender = "s" + (HttpContext?.Connection.Id.ToString() ?? "null");
             string fileName = @".\requests\" + sender + ".pi";
             System.IO.Directory.CreateDirectory(@".\requests\");
             System.IO.File.WriteAllText(fileName, program);
@@ -61,8 +61,8 @@ namespace WebApi.Controllers
 
             string error = "";
             string output = "";
-            process.OutputDataReceived += (_, data) => error += data.Data + "\r\n";
-            process.ErrorDataReceived += (_, data) => output += data.Data + "\r\n";
+            process.OutputDataReceived += (_, data) => output += data.Data + "\r\n";
+            process.ErrorDataReceived += (_, data) => error += data.Data + "\r\n";
             Console.WriteLine("starting");
             process.Start();
             process.BeginOutputReadLine();
@@ -82,7 +82,7 @@ namespace WebApi.Controllers
             Console.WriteLine($"Out: {output}");
             Console.WriteLine($"Err: {error}");
 
-            return output.Replace("\r\n\r\n", "\r\n") + "\r\n" + error;
+            return ((error.Length > 0) ? (error.Replace("\r\n\r\n", "\r\n") + "\r\n") : "") + output;
         }
     }
 }

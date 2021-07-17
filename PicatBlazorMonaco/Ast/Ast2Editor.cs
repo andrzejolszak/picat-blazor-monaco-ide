@@ -198,8 +198,8 @@ namespace Ast2
                         {
                             InlineClassName = "declarationDecoration",
                             HoverMessage = new[] { new MarkdownString { Value = decl.Name + "/" + decl.Args.Count } },
-                            Minimap = new ModelDecorationMinimapOptions { Color = "darkblue" },
-                            OverviewRuler = new ModelDecorationOverviewRulerOptions { Color = "darkblue" }
+                            Minimap = new ModelDecorationMinimapOptions { Color = "royalblue" },
+                            OverviewRuler = new ModelDecorationOverviewRulerOptions { Color = "royalblue" }
                         }
                     };
 
