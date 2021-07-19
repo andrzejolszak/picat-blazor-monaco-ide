@@ -28,12 +28,20 @@ namespace PicatBlazorMonaco.Ast
             List<Declaration> res = new List<Declaration>();
             ParsingHelper helper = new ParsingHelper(input);
             Declaration nextDeclaration = new Declaration();
+            int prevIndex = -1;
             start:
             helper.SkipWhiteSpace();
             if (helper.EndOfText)
             {
                 return res;
             }
+
+            if (helper == prevIndex)
+            {
+                throw new InvalidOperationException("Progress staled at " + helper.Text.Insert(prevIndex, "^"));
+            }
+
+            prevIndex = helper.Index;
 
             if (helper.Peek() == '%')
             {
@@ -105,8 +113,16 @@ namespace PicatBlazorMonaco.Ast
             lastPos = helper.Index;
             int nesting = 1;
             List<string> args = new List<string>();
+            int prevIndex = -1;
             while (helper.Remaining > 0 && nesting > 0)
             {
+                if (helper == prevIndex)
+                {
+                    throw new InvalidOperationException("Progress staled at " + helper.Text.Insert(prevIndex, "^"));
+                }
+
+                prevIndex = helper.Index;
+
                 char cc = helper.Get();
                 if (cc == '.' && char.IsWhiteSpace(helper.Peek(1)))
                 {
@@ -147,8 +163,16 @@ namespace PicatBlazorMonaco.Ast
             foreach (IGrouping<string, Declaration> name in byName)
             {
                 helper.Index = 0;
+                int prevIndex = -1;
                 while (!helper.EndOfText)
                 {
+                    if (helper == prevIndex)
+                    {
+                        throw new InvalidOperationException("Progress staled at " + helper.Text.Insert(prevIndex, "^"));
+                    }
+
+                    prevIndex = helper.Index;
+
                     if (helper.SkipTo(name.Key))
                     {
                         int offset = helper.Index;
