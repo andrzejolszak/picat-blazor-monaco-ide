@@ -51,6 +51,11 @@ namespace PicatBlazorMonaco.Ast
             nextDeclaration = new Declaration();
             current.Name = helper.ParseTo(':', '.', '(', '?', '-', '=', ' ', '\r', '\n', '\t').Trim();
             current.NameOffset = lastPos;
+            if (current.Name == "")
+            {
+                helper++;
+                goto start;
+            }
 
             if (char.IsWhiteSpace(helper.Peek()) || helper.Peek() == '(')
             {
@@ -103,6 +108,12 @@ namespace PicatBlazorMonaco.Ast
             while (helper.Remaining > 0 && nesting > 0)
             {
                 char cc = helper.Get();
+                if (cc == '.' && char.IsWhiteSpace(helper.Peek(1)))
+                {
+                    helper--;
+                    return args;
+                }
+
                 if (cc == ')' || cc == ']' || cc == '}')
                 {
                     nesting--;

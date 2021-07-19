@@ -86,5 +86,35 @@ foo(P, L) :-
             List<Reference> references = DeclarationParser.ParseReferences(Examples.SeveralExamples, res);
             references.Count.Should().Be(120);
         }
+
+        [InlineData("...")]
+        [InlineData("abc")]
+        [InlineData("--")]
+        [InlineData("abc(a,")]
+        [InlineData("abc(a,)")]
+        [InlineData("abc(a,b) =")]
+        [InlineData("abc(a,n) => foo")]
+        [InlineData("abc(a,n) => foo(")]
+        [InlineData("abc(a,n) => foo(.")]
+        [InlineData("abc(a,n) => foo(1, 2")]
+        [InlineData("abc(,n) => foo(,f")]
+
+        [Theory(Timeout = 2000)]
+        public void SyntaxErrorHandling(string input)
+        {
+            string program = $@"% phrase/2
+foo(P, L) :-
+    call(Goal).
+{input}
+bar(a, X) => true.
+zar ?=> foo(a, 1).
+{input}";
+            List<Declaration> res = DeclarationParser.ParseDeclarations(program);
+            res.Single(x => x.Name == "foo");
+            res.Single(x => x.Name == "zar");
+
+            List<Reference> references = DeclarationParser.ParseReferences(program, res);
+            references.Count.Should().Be(1);
+        }
     }
 }
