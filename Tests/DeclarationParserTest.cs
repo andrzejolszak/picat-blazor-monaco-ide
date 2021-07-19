@@ -88,7 +88,16 @@ foo(P, L) :-
         }
 
         [InlineData("...")]
+        [InlineData(". .. .")]
         [InlineData("abc")]
+        [InlineData("aa => c")]
+        [InlineData("aa.b")]
+        [InlineData("aa. b")]
+        [InlineData("aa.=>(")]
+        [InlineData("aa(")]
+        [InlineData("aa)")]
+        [InlineData("abc())")]
+        [InlineData("abc(()")]
         [InlineData("--")]
         [InlineData("abc(a,")]
         [InlineData("abc(a,)")]
@@ -99,7 +108,7 @@ foo(P, L) :-
         [InlineData("abc(a,n) => foo(1, 2")]
         [InlineData("abc(,n) => foo(,f")]
 
-        [Theory(Timeout = 2000)]
+        [Theory]
         public void SyntaxErrorHandling(string input)
         {
             string program = $@"% phrase/2

@@ -152,14 +152,19 @@ namespace PicatBlazorMonaco.Ast
                     if (helper.SkipTo(name.Key))
                     {
                         int offset = helper.Index;
-                        if (char.IsLetter(helper.Peek(-1)))
+                        if (char.IsLetterOrDigit(helper.Peek(-1)))
                         {
                             helper.ParseCharacters(name.Key.Length);
                             continue;
                         }
 
                         helper.ParseCharacters(name.Key.Length);
-                        
+
+                        if (char.IsLetterOrDigit(helper.Peek()))
+                        {
+                            continue;
+                        }
+
                         if (declarationOffsets.Contains(offset))
                         {
                             continue;
