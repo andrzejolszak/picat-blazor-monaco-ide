@@ -17,7 +17,8 @@
               Id="sample-code-editor-123"
               ConstructionOptions="EditorConstructionOptions"
               OnDidInit="EditorOnDidInit"
-              OnKeyDown="OnKeyDown"/>
+              OnKeyDown="OnKeyDown"
+              OnKeyUp="OnKeyUp"/>
 
 <label>
     Goal:
@@ -35,6 +36,7 @@
 @using System.Threading.Tasks
 @using Microsoft.AspNetCore.WebUtilities;
 @using BlazorMonaco;
+@using System.Timers;
 
 @inject HttpClient Http
 @inject NavigationManager NavManager
@@ -50,6 +52,8 @@
     private MonacoEditor _editor { get; set; }
     [Inject] IJSRuntime _jsRuntime { get; set; }
     private DotNetObjectReference<Index> objRef;
+    private Timer aTimer;
+
 
     private string ValueToSet { get; set; }
 
@@ -71,6 +75,10 @@
 
     private async Task EditorOnDidInit(MonacoEditorBase editor)
     {
+        aTimer = new Timer(1000);
+        aTimer.Elapsed += OnUserFinish;
+        aTimer.AutoReset = false;
+
         objRef = DotNetObjectReference.Create(this);
         await _jsRuntime.InvokeVoidAsync(@"setDotNetHelper", objRef);
 
@@ -179,6 +187,15 @@
         }
     }
 
+    private async Task OnKeyUp(KeyboardEvent keyboard)
+    {
+        // remove previous one
+        aTimer.Stop();
+
+        // new timer
+        aTimer.Start();
+    }
+
     private async Task RunKeyPress(KeyboardEventArgs keyboard)
     {
         if (keyboard.Key != "Enter")
@@ -197,6 +214,7 @@
         if (code != null)
         {
             await this._editor.SetValue(code);
+            await this._astEditor.UpdateDeclarations(code);
         }
     }
 
@@ -206,5 +224,22 @@
         var lineIndex = this.Output.Take(pos).Count(c => c == '\n');
         string[] lines = this.Output.Split("\n");
         await _astEditor.MoveToError(lines[lineIndex]);
+    }
+
+    private void OnUserFinish(Object source, ElapsedEventArgs e)
+    {
+        InvokeAsync(async () =>
+        {
+            try
+            {
+                string program = await _editor.GetValue();
+                await this._astEditor.UpdateDeclarations(program);
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await this._astEditor.ConsoleError(ex.Message);
+            }
+        });
     }
 }
