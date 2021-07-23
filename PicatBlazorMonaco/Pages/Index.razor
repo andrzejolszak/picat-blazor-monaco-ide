@@ -152,6 +152,7 @@
             string program = WebUtility.UrlEncode(orgProgram);
             string goal = Goal.Trim();
 
+            Http.Timeout = TimeSpan.FromSeconds(15);
             string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal={WebUtility.UrlEncode(goal)}&program={program}");
             this.Output = DateTime.Now.ToLongTimeString() + "\r\nPicat> " + goal + "\r\n" + s;
             this.StatusColor = "green";
@@ -234,11 +235,24 @@
             {
                 string program = await _editor.GetValue();
                 await this._astEditor.UpdateDeclarations(program);
-                StateHasChanged();
+
+
+                program = WebUtility.UrlEncode(program);
+                Http.Timeout = TimeSpan.FromSeconds(2);
+                string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal=--c&program={program}");
+                this.Output = DateTime.Now.ToLongTimeString() + "\r\n" + s;
+                this.StatusColor = "green";
+                _ = await this._astEditor.UpdateErrors(s);
             }
+
             catch (Exception ex)
             {
+                this.StatusColor = "red";
                 await this._astEditor.ConsoleError(ex.Message);
+            }
+            finally
+            {
+                StateHasChanged();
             }
         });
     }
