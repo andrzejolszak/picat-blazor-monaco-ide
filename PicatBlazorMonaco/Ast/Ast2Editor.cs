@@ -27,6 +27,8 @@ namespace Ast2
 
         private List<DeclarationParser.Declaration> _currentDeclarations = new List<DeclarationParser.Declaration>();
 
+        private IntervalTree<int, DeclarationParser.Reference> _currentReferences = new IntervalTree<int, DeclarationParser.Reference>();
+
         public Ast2Editor(MonacoEditor monacoEditor, IJSRuntime jsRuntime)
         {
             this._monacoEditor = monacoEditor;
@@ -83,6 +85,21 @@ namespace Ast2
         private async Task<Selection> GetSelection()
         {
             return await this._monacoEditor.GetSelection();
+        }
+
+        public async Task<BlazorMonaco.Range> GetDefinition(Position pos)
+        {
+            int offset = await this._model.GetOffsetAt(pos);
+            DeclarationParser.Reference reff = this._currentReferences.Query(offset).FirstOrDefault();
+            if (reff != null)
+            {
+                Position p = await this._model.GetPositionAt(reff.FirstMatch.NameOffset);
+                return new BlazorMonaco.Range(p.LineNumber, p.Column, p.LineNumber, p.Column + reff.FirstMatch.Name.Length);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public async Task<int> GetCurrentEditorControlPositionStart()
@@ -183,6 +200,7 @@ namespace Ast2
 
         public async Task UpdateDeclarations(string program)
         {
+            List<DeclarationParser.Reference> references = new List<DeclarationParser.Reference>();
             List<DeclarationParser.Declaration> declarations = new List<DeclarationParser.Declaration>();
             List <ModelDeltaDecoration> decors = new List<ModelDeltaDecoration>(1);
             try
@@ -205,6 +223,8 @@ namespace Ast2
 
                     decors.Add(d);
                 }
+
+                references = DeclarationParser.ParseReferences(program, declarations);
             }
             finally
             {
@@ -212,6 +232,11 @@ namespace Ast2
             }
 
             this._currentDeclarations = declarations;
+            this._currentReferences.Clear();
+            foreach (DeclarationParser.Reference reff in references)
+            {
+                this._currentReferences.Add(reff.NameOffset, reff.NameOffset + reff.FirstMatch.Name.Length, reff);
+            }
         }
 
         public async Task RefreshCompletions()

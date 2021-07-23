@@ -169,7 +169,7 @@
 
             monaco.languages.registerDefinitionProvider('picat', {
                 provideDefinition: async (model, position, token) => {
-                    var defRange = await window.dotNetHelper.invokeMethodAsync('GetDefinitionRange');
+                    var defRange = await window.dotNetHelper.invokeMethodAsync('GetDefinitionRange', position);
                     if (!defRange) {
                         return null;
                     }
