@@ -29,6 +29,8 @@ namespace Ast2
 
         private IntervalTree<int, DeclarationParser.Reference> _currentReferences = new IntervalTree<int, DeclarationParser.Reference>();
 
+        public List<(string, bool?, int)> TestResults = new List<(string, bool?, int)>();
+
         public Ast2Editor(MonacoEditor monacoEditor, IJSRuntime jsRuntime)
         {
             this._monacoEditor = monacoEditor;
@@ -108,13 +110,13 @@ namespace Ast2
             return await _model.GetOffsetAt(p);
         }
 
-        private async Task Select(int position)
+        public async Task Select(int position)
         {
             Position newPos = await this.GetPositionAt(position);
             await SetAndRevealPosition(newPos);
         }
 
-        private async Task SetAndRevealPosition(Position position)
+        public async Task SetAndRevealPosition(Position position)
         {
             await _monacoEditor.SetPosition(position);
             await _monacoEditor.RevealPositionInCenter(position);
@@ -203,6 +205,7 @@ namespace Ast2
             List<DeclarationParser.Reference> references = new List<DeclarationParser.Reference>();
             List<DeclarationParser.Declaration> declarations = new List<DeclarationParser.Declaration>();
             List <ModelDeltaDecoration> decors = new List<ModelDeltaDecoration>(1);
+            this.TestResults.Clear();
             try
             {
                 declarations = DeclarationParser.ParseDeclarations(program);
@@ -222,6 +225,11 @@ namespace Ast2
                     };
 
                     decors.Add(d);
+
+                    if (decl.Name.StartsWith("test_") && decl.Args.Count == 0)
+                    {
+                        this.TestResults.Add((decl.Name, null, decl.NameOffset));
+                    }
                 }
 
                 references = DeclarationParser.ParseReferences(program, declarations);

@@ -13,21 +13,52 @@
     }
 </select>
 
-<MonacoEditor @ref="_editor"
-              Id="sample-code-editor-123"
-              ConstructionOptions="EditorConstructionOptions"
-              OnDidInit="EditorOnDidInit"
-              OnKeyDown="OnKeyDown"
-              OnKeyUp="OnKeyUp"/>
+<div class="row">
+    <div class="column left">
+        <MonacoEditor @ref="_editor"
+                      Id="sample-code-editor-123"
+                      ConstructionOptions="EditorConstructionOptions"
+                      OnDidInit="EditorOnDidInit"
+                      OnKeyDown="OnKeyDown"
+                      OnKeyUp="OnKeyUp" />
 
-<label>
-    Goal:
-    <input @bind="Goal" style="width:800px" @bind:event="oninput"
-           @onkeydown="RunKeyPress" />
-    <button @onclick="RunGoal">Run</button>
-</label>
+        <label>
+            Goal:
+            <input @bind="Goal" style="width:800px" @bind:event="oninput"
+                   @onkeydown="RunKeyPress" />
+            <button @onclick="RunGoal">Run</button>
+        </label>
 
-<textarea @bind="Output" @ref="outputElement" @ondblclick="OutputDoubleClick" style="width:100%;height:200px" readonly="readonly" />
+        <textarea @bind="Output" @ref="outputElement" @ondblclick="OutputDoubleClick" style="width:100%;height:200px" readonly="readonly" />
+    </div>
+    <div class="column right">
+        Tests:
+        <button @onclick="RunAllTests">Run All</button>
+        <table>
+            <tbody>
+                @foreach (var test in (_astEditor?.TestResults ?? new List<(string, bool?, int)>()).OrderBy(x => x.Item2).ThenBy(x => x.Item1))
+                {
+                    <tr @ondblclick="@(() => OnTestDoubleClick(test))">
+                        @if (test.Item2 == true)
+                        {
+                        <td style="color:forestgreen">✅ @test.Item1</td>
+
+                        }
+                        else if (test.Item2 == false)
+                        {
+                    <td style="color:orangered">❌ @test.Item1</td>
+                        }
+                        else
+                        {
+                    <td style="color:dimgray">❔ @test.Item1</td>
+
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
 
 @using Ast2
 @using PicatBlazorMonaco.Ast
@@ -53,7 +84,6 @@
     [Inject] IJSRuntime _jsRuntime { get; set; }
     private DotNetObjectReference<Index> objRef;
     private Timer aTimer;
-
 
     private string ValueToSet { get; set; }
 
@@ -130,15 +160,17 @@
         }
     }
 
-    private async Task RunGoal(MouseEventArgs mouse)
+    private async Task<string> Run(string orgProgram, string goal, bool printOutput)
     {
         try
         {
-            this.Output = "Working...";
+            if (printOutput)
+            {
+                this.Output = "Working...";
+            }
             this.StatusColor = "gray";
             await InvokeAsync(StateHasChanged);
 
-            string orgProgram = await _editor.GetValue();
 
             try
             {
@@ -150,23 +182,35 @@
             }
 
             string program = WebUtility.UrlEncode(orgProgram);
-            string goal = Goal.Trim();
 
-            Http.Timeout = TimeSpan.FromSeconds(15);
             string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal={WebUtility.UrlEncode(goal)}&program={program}");
-            this.Output = DateTime.Now.ToLongTimeString() + "\r\nPicat> " + goal + "\r\n" + s;
             this.StatusColor = "green";
-            _ = await this._astEditor.UpdateErrors(s);
+            int errors = await this._astEditor.UpdateErrors(s);
+            if (errors > 0 || printOutput)
+            {
+                this.Output = DateTime.Now.ToLongTimeString() + "\r\nPicat> " + goal + "\r\n" + s;
+            }
+
+            return s;
         }
         catch (Exception ex)
         {
             this.StatusColor = "red";
             this.Output = DateTime.Now.ToLongTimeString() + "\r\nFailed\r\n" + ex.Message;
+            return ex.Message;
         }
         finally
         {
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private async Task RunGoal(MouseEventArgs mouse)
+    {
+        string orgProgram = await _editor.GetValue();
+        string goal = Goal.Trim();
+
+        _ = await Run(orgProgram, goal, true);
     }
 
 
@@ -227,6 +271,40 @@
         await _astEditor.MoveToError(lines[lineIndex]);
     }
 
+    private async Task OnTestDoubleClick((string, bool?, int) test)
+    {
+        await _astEditor.Select(test.Item3);
+    }
+
+    private async Task RunAllTests(MouseEventArgs mouse)
+    {
+        if (this._astEditor.TestResults.Count == 0)
+        {
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        string orgProgram = await _editor.GetValue();
+        string testAll = "\r\ntestt___all =>";
+        foreach(var test in this._astEditor.TestResults)
+        {
+            testAll += $@"
+if ({test.Item1}) then writeln('{test.Item1}+') else writeln('{test.Item1}-') end,";
+        }
+
+        string res = await Run(orgProgram + testAll.Substring(0, testAll.Length - 1) + ".", "testt___all", false);
+
+        List<(string, bool?, int)> newTestResults = new List<(string, bool?, int)>();
+        foreach (var test in this._astEditor.TestResults)
+        {
+            newTestResults.Add((test.Item1, (bool?)res.Contains(test.Item1 + "+"), test.Item3));
+        }
+
+        this._astEditor.TestResults = newTestResults;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
     private void OnUserFinish(Object source, ElapsedEventArgs e)
     {
         InvokeAsync(async () =>
@@ -238,7 +316,6 @@
 
 
                 program = WebUtility.UrlEncode(program);
-                Http.Timeout = TimeSpan.FromSeconds(2);
                 string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal=--c&program={program}");
                 this.Output = DateTime.Now.ToLongTimeString() + "\r\n" + s;
                 this.StatusColor = "green";

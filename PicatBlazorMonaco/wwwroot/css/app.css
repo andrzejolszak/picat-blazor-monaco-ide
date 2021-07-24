@@ -78,3 +78,22 @@ a, .btn-link {
     color: royalblue !important;
     font-weight: bold;
 }
+
+.column {
+    float: left;
+    padding: 10px;
+}
+
+.left {
+    width: 80%;
+}
+
+.right {
+    width: 20%;
+}
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
