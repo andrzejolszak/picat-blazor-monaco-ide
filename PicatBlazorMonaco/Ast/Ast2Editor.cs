@@ -25,6 +25,8 @@ namespace Ast2
 
         private string[] _currentDeclarationDecors;
 
+        private string[] _currentBuiltinReferenceDecors;
+
         private List<DeclarationParser.Declaration> _currentDeclarations = new List<DeclarationParser.Declaration>();
 
         private IntervalTree<int, DeclarationParser.Reference> _currentReferences = new IntervalTree<int, DeclarationParser.Reference>();
@@ -202,6 +204,11 @@ namespace Ast2
 
         public async Task UpdateDeclarations(string program)
         {
+            if(_model == null)
+            {
+                return;
+            }
+
             List<DeclarationParser.Reference> references = new List<DeclarationParser.Reference>();
             List<DeclarationParser.Declaration> declarations = new List<DeclarationParser.Declaration>();
             List <ModelDeltaDecoration> decors = new List<ModelDeltaDecoration>(1);
@@ -244,6 +251,31 @@ namespace Ast2
             foreach (DeclarationParser.Reference reff in references)
             {
                 this._currentReferences.Add(reff.NameOffset, reff.NameOffset + reff.FirstMatch.Name.Length, reff);
+            }
+
+            // Built-in refences for hover
+            List<ModelDeltaDecoration> builtinRefDecors = new List<ModelDeltaDecoration>(1);
+            try
+            {
+                List<DeclarationParser.Reference> builtinReferences = DeclarationParser.ParseReferences(program, BuiltIns.BuiltinsDeclarations);
+                foreach (DeclarationParser.Reference reff in builtinReferences)
+                {
+                    Position pos = await _model.GetPositionAt(reff.NameOffset);
+                    ModelDeltaDecoration d = new ModelDeltaDecoration
+                    {
+                        Range = new BlazorMonaco.Range { StartColumn = pos.Column, StartLineNumber = pos.LineNumber, EndColumn = pos.Column + reff.FirstMatch.Name.Length, EndLineNumber = pos.LineNumber },
+                        Options = new ModelDecorationOptions
+                        {
+                            HoverMessage = new[] { new MarkdownString { Value = reff.FirstMatch.Comment } },
+                        }
+                    };
+
+                    builtinRefDecors.Add(d);
+                }
+            }
+            finally
+            {
+                this._currentBuiltinReferenceDecors = await _monacoEditor.DeltaDecorations(this._currentBuiltinReferenceDecors, builtinRefDecors.ToArray());
             }
         }
 

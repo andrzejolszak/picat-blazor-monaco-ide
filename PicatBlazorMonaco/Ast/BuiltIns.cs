@@ -58,6 +58,8 @@ namespace PicatBlazorMonaco.Ast
 
         public static List<(string, string, string)> Functions = new List<(string, string, string)>(100);
 
+        public static List<DeclarationParser.Declaration> BuiltinsDeclarations = new List<DeclarationParser.Declaration>(100);
+
         public static void InitializeFunctions(string data)
         {
             Functions.Clear();
@@ -105,6 +107,22 @@ namespace PicatBlazorMonaco.Ast
                     }
 
                     entry += line;
+                }
+            }
+
+            BuiltinsDeclarations.Clear();
+            foreach ((string, string, string) o in BuiltIns.Functions)
+            {
+                try
+                {
+                    string decl = o.Item1.Trim();
+                    DeclarationParser.Declaration declaration = DeclarationParser.ParseBuiltinDeclaration(decl);
+                    declaration.Comment = "[" + o.Item2 + "] " + o.Item3;
+                    BuiltinsDeclarations.Add(declaration);
+                }
+                catch
+                {
+                    // NOP
                 }
             }
         }

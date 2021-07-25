@@ -213,5 +213,22 @@ namespace PicatBlazorMonaco.Ast
 
             return res;
         }
+
+        public static Declaration ParseBuiltinDeclaration(string builtin)
+        {
+            ParsingHelper helper = new ParsingHelper(builtin);
+
+            string name = helper.ParseTo(' ', '(', '=', ':');
+
+            helper.SkipWhiteSpace();
+
+            List<string> args = new List<string>();
+            if (helper.Peek() == '(')
+            {
+                args = ExtractArguments(helper);
+            }
+
+            return new Declaration() { NameOffset = -1, Name = name, Args = args };
+        }
     }
 }
