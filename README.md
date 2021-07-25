@@ -20,6 +20,6 @@ The editor is based on 2 components:
    Please note that you can still use the front end for basic editing even if you can't connect to a compiler service, however you will not be able to compile and run programs.
 
 Caveats:
-- Only tested on Windows. Though it's built on .net core, so should be possible to build for Linux/Mac with minimal or no code changes.
+- Only tested on Windows. Though it's built on .net core, so should be possible to build for Linux/Mac with minimal or no code changes. If you want to contribute a non-Windows build, please send me a PR or a link to your builds.
 - Currently the Web API compiler service comes bundled with the Windows compiler - using on Linux/Mac would require the respective compiler version to be included.
 - Currently the Web API compiler service is not safe to be exposed on the network where anybody can run arbitrary code on it. Please only use on localhost or on trusted networks.

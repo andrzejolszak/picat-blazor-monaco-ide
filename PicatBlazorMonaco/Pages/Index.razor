@@ -41,16 +41,16 @@
                     <tr @ondblclick="@(() => OnTestDoubleClick(test))">
                         @if (test.Item2 == true)
                         {
-                        <td style="color:forestgreen">✅ @test.Item1</td>
+                        <td style="color:forestgreen"> ✅ @test.Item1</td>
 
                         }
                         else if (test.Item2 == false)
                         {
-                    <td style="color:orangered">❌ @test.Item1</td>
+                    <td style="color:orangered"> ❌ @test.Item1</td>
                         }
                         else
                         {
-                    <td style="color:dimgray">❔ @test.Item1</td>
+                    <td style="color:dimgray"> ❔ @test.Item1</td>
 
                         }
                     </tr>
@@ -168,6 +168,7 @@
             {
                 this.Output = "Working...";
             }
+
             this.StatusColor = "gray";
             await InvokeAsync(StateHasChanged);
 
@@ -179,6 +180,16 @@
             catch (Exception ex)
             {
                 await this._astEditor.ConsoleError(ex.Message);
+            }
+
+            if (string.IsNullOrWhiteSpace(ServiceIP))
+            {
+                if (printOutput)
+                {
+                    this.Output = "No service IP";
+                }
+
+                return "No service IP";
             }
 
             string program = WebUtility.UrlEncode(orgProgram);
@@ -286,10 +297,10 @@
 
         string orgProgram = await _editor.GetValue();
         string testAll = "\r\ntestt___all =>";
-        foreach(var test in this._astEditor.TestResults)
+        foreach(var test in this._astEditor.TestResults.OrderBy(x => Guid.NewGuid()))
         {
             testAll += $@"
-if ({test.Item1}) then writeln('{test.Item1}+') else writeln('{test.Item1}-') end,";
+if (catch({test.Item1},_,writeln('{test.Item1}-'))) then writeln('{test.Item1}+') else writeln('{test.Item1}-') end,";
         }
 
         string res = await Run(orgProgram + testAll.Substring(0, testAll.Length - 1) + ".", "testt___all", false);
@@ -297,7 +308,7 @@ if ({test.Item1}) then writeln('{test.Item1}+') else writeln('{test.Item1}-') en
         List<(string, bool?, int)> newTestResults = new List<(string, bool?, int)>();
         foreach (var test in this._astEditor.TestResults)
         {
-            newTestResults.Add((test.Item1, (bool?)res.Contains(test.Item1 + "+"), test.Item3));
+            newTestResults.Add((test.Item1, (bool?)!res.Contains(test.Item1 + "-"), test.Item3));
         }
 
         this._astEditor.TestResults = newTestResults;
@@ -314,6 +325,11 @@ if ({test.Item1}) then writeln('{test.Item1}+') else writeln('{test.Item1}-') en
                 string program = await _editor.GetValue();
                 await this._astEditor.UpdateDeclarations(program);
 
+
+                if (string.IsNullOrWhiteSpace(ServiceIP))
+                {
+                    return;
+                }
 
                 program = WebUtility.UrlEncode(program);
                 string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal=--c&program={program}");
