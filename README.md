@@ -1,5 +1,5 @@
-# picat-bm-ide
-Web IDE for the Picat programming language based on Blazor and Monaco
+# picat-blazor-monaco-ide
+Web IDE for the Picat programming language based on .net Blazor and Monaco
 
 This editor aims to aid in learning Picat syntax and editing Picat programs.
 
@@ -25,14 +25,13 @@ Caveats:
 - Currently the Web API compiler service is not safe to be exposed on the network where anybody can run arbitrary code on it. Please only use on localhost or on trusted networks.
 
 The editor comes with an example that showcases its features:
-    /*
-     Welcome to the Picat editor based on Blazor and Monaco!
-     This editor aims to aid in learning Picat syntax and editing Picat programs.
-     Below you will get a step by step introduction to the available features.
-     The editor relies on a compiler service to do the actual compilation and code execution,
-     and to enable some of the features. Nevertheless, it is still possible to get a basic
-     editing experience without the service running.
-    */
+
+    % Welcome to the Picat editor based on Blazor and Monaco!
+    % This editor aims to aid in learning Picat syntax and editing Picat programs.
+    % Below you will get a step by step introduction to the available features.
+    % The editor relies on a compiler service to do the actual compilation and code execution,
+    % and to enable some of the features. Nevertheless, it is still possible to get a basic
+    % editing experience without the service running.
     main => foo.
     
     % Syntax highlighting and basic operations:
