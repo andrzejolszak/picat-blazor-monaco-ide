@@ -84,6 +84,7 @@
     [Inject] IJSRuntime _jsRuntime { get; set; }
     private DotNetObjectReference<Index> objRef;
     private Timer aTimer;
+    private string _oldProgramUserStopTyping;
 
     private string ValueToSet { get; set; }
 
@@ -323,6 +324,12 @@ if (catch({test.Item1},_,writeln('{test.Item1}-'))) then writeln('{test.Item1}+'
             try
             {
                 string program = await _editor.GetValue();
+                if (this._oldProgramUserStopTyping == program)
+                {
+                    return;
+                }
+
+                this._oldProgramUserStopTyping = program;
                 await this._astEditor.UpdateDeclarations(program);
 
 
