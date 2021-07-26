@@ -326,7 +326,7 @@ namespace Ast2
                 compl.insertText = target;
                 compl.detail = "[User]";
                 compl.documentation = target + ":\r\n" + d.Comment;
-                compl.kind = CompletionItemKind.Function;
+                compl.kind = CompletionItemKind.Value;
 
                 jsCompletions.Add(compl);
             }
