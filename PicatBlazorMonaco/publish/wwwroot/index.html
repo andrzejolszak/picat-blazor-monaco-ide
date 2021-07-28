@@ -1,0 +1,204 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>ProjectionalBlazorMonaco</title>
+    <base href="/" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="ProjectionalBlazorMonaco.styles.css" rel="stylesheet" />
+    <link href="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+    <script>require.config({ paths: { 'vs': '_content/BlazorMonaco/lib/monaco-editor/min/vs' } });</script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+    <script src="_content/BlazorMonaco/jsInterop.js"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_content/BrowserInterop/scripts.js"></script>
+
+    <script>
+        function createCssStyle(styleDef) {
+            var style = document.createElement('style');
+            style.type = 'text/css';
+            style.innerHTML = styleDef;
+            document.getElementsByTagName('head')[0].appendChild(style);
+        }
+
+        function initializeCompletions() {
+            monaco.languages.register({ id: 'picat' });
+
+            // Register a tokens provider for the language
+            monaco.languages.setMonarchTokensProvider('picat', {
+                // Set defaultToken to invalid to see what you do not tokenize yet
+                defaultToken: 'invalid',
+
+                keywords: [
+                    'import', 'module', 'if', 'then', 'else', 'elseif', 'end', 'table'
+                ],
+
+                typeKeywords: [
+                    'boolean', 'double', 'byte', 'int', 'short', 'char', 'void', 'long', 'float'
+                ],
+
+                operators: [
+                    "=", "!=", ">", ">=", "<", "<=", "=<", "..", "!",
+                    ",", ";", ":", "::", ".", ". ",
+                    "=>", "?=>", "==", "!==", ":=", "|", "$", "@",
+                    "/' ", "' /", "˜", "ˆ", "<<", ">>",
+                    "+", "-", "*", "**", "/", "/>", "/<", "ˆ",
+                    "#=", "#!=", "#>", "#>=", "#<", "#<=", "#=<",
+                    "#/' ", "#' /", "#˜", "#ˆ", "#=>", "#<=>",
+                    "@>", "@>=", "@<", "@<=", "@=<"
+                ],
+
+                // we include these common regular expressions
+                symbols: /[=><!~?:&|+\-*\/\^%]+/,
+
+                // C# style strings
+                escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+
+                // The main tokenizer for our languages
+                tokenizer: {
+                    root: [
+                        // identifiers and keywords
+                        [/[$][\w\$]*/, 'type'],
+                        [/[A-Z][\w\$]*/, 'variable'],
+                        [/[a-z_][\w$]*(?=\()/, 'annotation'],
+                        [/[a-z_][\w$]*/, {
+                            cases: {
+                                '@typeKeywords': 'keyword',
+                                '@keywords': 'keyword',
+                                '@default': 'identifier'
+                            }
+                        }],
+
+                        // whitespace
+                        { include: '@whitespace' },
+
+                        // delimiters and operators
+                        [/[{}()\[\]]/, '@brackets'],
+                        [/[<>](?!@symbols)/, '@brackets'],
+                        [/@symbols/, {
+                            cases: {
+                                '@operators': 'operator',
+                                '@default': ''
+                            }
+                        }],
+
+                        // @ annotations.
+                        // As an example, we emit a debugging log message on these tokens.
+                        // Note: message are supressed during the first load -- change some lines to see them.
+                        [/@\s*[a-zA-Z_\$][\w\$]*/, { token: 'annotation', log: 'annotation token: $0' }],
+
+                        // numbers
+                        [/\d*\.\d+([eE][\-+]?\d+)?/, 'number.float'],
+                        [/0[xX][0-9a-fA-F]+/, 'number.hex'],
+                        [/\d+/, 'number'],
+
+                        // delimiter: after number because of .\d floats
+                        [/[.,]/, 'delimiter'],
+
+                        // strings
+                        [/"([^"\\]|\\.)*$/, 'string.invalid'],  // non-teminated string
+                        [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
+
+                        // characters
+                        [/'[^\\']'/, 'string'],
+                        [/(')(@escapes)(')/, ['string', 'string.escape', 'string']],
+                        [/'/, 'string.invalid']
+                    ],
+
+                    comment: [
+                        [/(^%.*$)/, 'comment'],
+                        [/[^\/*]+/, 'comment'],
+                        [/\/\*/, 'comment', '@push'],    // nested comment
+                        ["\\*/", 'comment', '@pop'],
+                        [/[\/*]/, 'comment']
+                    ],
+
+                    string: [
+                        [/[^\\"]+/, 'string'],
+                        [/@escapes/, 'string.escape'],
+                        [/\\./, 'string.escape.invalid'],
+                        [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }]
+                    ],
+
+                    whitespace: [
+                        [/[ \t\r\n]+/, 'white'],
+                        [/(^%.*$)/, 'comment'],
+                        [/\/\*/, 'comment', '@comment'],
+                        [/\/\/.*$/, 'comment'],
+                    ],
+                },
+            });
+
+            // Define a new theme that contains only rules that match this language
+            monaco.editor.defineTheme('picatTheme', {
+                base: 'vs',
+                inherit: true,
+                rules: [
+                    { token: 'comment', foreground: '808080' },
+                    { token: 'keyword', foreground: 'AA00FF', fontStyle: 'bold' },
+                    { token: 'type', foreground: 'FFA500' },
+                    { token: 'annotation', foreground: 'FFA533' },
+                    { token: 'variable', foreground: '888800' },
+                ]
+            });
+
+            // Completions are declare to monaco through this global array as a workaround, because the API is not yet exposed by blazorMonaco
+            window.completionsArray = [];
+
+            monaco.languages.registerCompletionItemProvider('picat', {
+                provideCompletionItems: function (model, position) {
+                    return {
+                        suggestions: globalThis.completionsArray
+                    };
+                }
+            });
+
+            monaco.languages.registerDefinitionProvider('picat', {
+                provideDefinition: async (model, position, token) => {
+                    var defRange = await window.dotNetHelper.invokeMethodAsync('GetDefinitionRange', position);
+                    if (!defRange) {
+                        return null;
+                    }
+                    else {
+                        return {
+                            uri: model.uri,
+                            range: defRange
+                        }
+                    }
+                }
+            });
+        }
+
+        function setCompletionsArray(completions) {
+            window.completionsArray = completions;
+        }
+
+        function getWebDriver() {
+            return navigator.webdriver;
+        }
+
+        window.getSelectedStart = (element) => {
+            return element.selectionStart;
+        }
+
+        function setDotNetHelper(helper) {
+            window.dotNetHelper = helper;
+        }
+    </script>
+</body>
+
+</html>
