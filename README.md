@@ -5,6 +5,9 @@ This editor aims to aid in learning Picat syntax and editing Picat programs.
 
 ![](screenshot.png)
 
+Live demo (without the code compilation and execution server) available here:
+https://andrzejolszak.github.io/picat-blazor-monaco-ide/PicatBlazorMonaco/publish/wwwroot/
+
 Some of the features provided by the editor:
 - Syntax highlighting
 - Code completion with documentation for the built-in APIs (CTRL+Space)
