@@ -32,9 +32,10 @@ The editor is based on 2 components:
 - Currently the Web API compiler service is not safe to be exposed on the network where anybody can run arbitrary code on it. Please only use on localhost or on trusted networks.
 
 ## Running the IDE
+You have multiple option for how to use the IDE:
 - You can use the Live demo as is, and just start the compiler web service on your machine to get the full IDE experience
 - Build the sources using VisualStudio and .net Core 5, and run from VS
-- Run the attached Windows release binaries (only the editor server has to be Windows, the actual client machines used by developers can be other systems)
+- Run the attached Windows release binaries
 
 ## Feature playground
 The editor comes with an example that showcases the major features:
