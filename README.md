@@ -101,6 +101,6 @@ The editor comes with a tutorial example that showcases the major features:
     % If possible, please include the contents of the JS console log after you have triggered the error (F12, or Developers tools in most browsers)
     
 ## Caveats:
-- Currently only tested on Windows. Though it's built on .net core, so should be possible to build for Linux/Mac with minimal or no code changes. If you want to contribute a non-Windows build or a Windows Docker image for the server, please send me a PR or a link to your builds.
+- Currently only tested hosting on Windows. Though it's built on .net core, so should be possible to build for Linux/Mac with minimal or no code changes. If you want to contribute a non-Windows build or a Windows Docker image for the server, please send me a PR or a link to your builds.
 - Currently the Web API compiler service comes bundled with the Windows compiler - using on Linux/Mac would require the respective compiler version to be included. As a sidenote, the service implementation is very simple it's just a HTTP server that forwards request parameters to the compiler and returns the compiler outputs - it would be definitely possible to rewrite it in another language in an evening or two.
-- Currently the Web API compiler service is not safe to be exposed on the network where anybody can run arbitrary code on it. Please only use on localhost or on trusted networks.
+- The Web API compiler service contain no safety mechanisms, and will allow any code to be executed. This means it obviously should not be exposed on untrusted networks. Please only use on localhost or on trusted networks.
