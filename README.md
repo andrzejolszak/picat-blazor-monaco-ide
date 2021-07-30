@@ -14,8 +14,8 @@ https://andrzejolszak.github.io/picat-blazor-monaco-ide/PicatBlazorMonaco/publis
 ## Technical details
 The editor is based on 2 components:
 1. The front-end page: this where the core editing experience resides. It's built using Blazor and Monaco, and runs using client-side WASM.
-2. The Web Api compiler service. A thin wrapper around the Picat compiler command line program. It's task is to forward code to the compiler to parse, compile and run programs.
-   Please note that you can still use the front-end alone for code editing, however you will not be able to compile and run programs.
+2. The Web Api compiler service. a thin HTTP server wrapping the Picat compiler command line program. It's task is to forward code to the compiler to parse, compile and run programs and to return the output.
+   Please note that you can still use the front-end standalone for code editing, however you will need the service if you want to parse, compile and run programs.
 
 ## Running the IDE
 You have several options for how to host the IDE:
@@ -24,7 +24,7 @@ You have several options for how to host the IDE:
 - Run the attached Windows release binaries
 
 ## Features playground
-The editor comes with an example that showcases the major features:
+The editor comes with a tutorial example that showcases the major features:
 
     % Welcome to the Picat editor based on Blazor and Monaco!
     % This editor aims to aid in learning Picat syntax and editing Picat programs.
