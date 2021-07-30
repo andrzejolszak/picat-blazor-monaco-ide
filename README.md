@@ -1,5 +1,5 @@
 # picat-blazor-monaco-ide
-Web IDE for the Picat programming language based on .net Blazor and Monaco.
+Web IDE for the Picat programming language based on .net Blazor and Monaco. It provides common moder code editor features like syntax highlighting, code completion with documentation preview (CTRL+Space), indentation helpers, occurences highlighting, search, etc. and compilation/execution of code via an associated compiler wrapper service.
 
 This editor aims to aid in learning Picat syntax and editing Picat programs.
 
@@ -29,7 +29,7 @@ The editor is based on 2 components:
 
 ## Caveats:
 - Currently only tested on Windows. Though it's built on .net core, so should be possible to build for Linux/Mac with minimal or no code changes. If you want to contribute a non-Windows build or a Windows Docker image for the server, please send me a PR or a link to your builds.
-- Currently the Web API compiler service comes bundled with the Windows compiler - using on Linux/Mac would require the respective compiler version to be included. Also the service implementation is very simple, it would be definitely possible to rewrite it in another language in an evening or two, if you wanted to do this.
+- Currently the Web API compiler service comes bundled with the Windows compiler - using on Linux/Mac would require the respective compiler version to be included. As a sidenote, the service implementation is very simple it's just a HTTP server that forwards request parameters to the compiler and returns the compiler outputs - it would be definitely possible to rewrite it in another language in an evening or two.
 - Currently the Web API compiler service is not safe to be exposed on the network where anybody can run arbitrary code on it. Please only use on localhost or on trusted networks.
 
 ## Running the IDE
