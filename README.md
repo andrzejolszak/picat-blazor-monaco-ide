@@ -6,7 +6,8 @@ This editor aims to aid in learning Picat syntax and editing Picat programs.
 ![](screenshot.png)
 
 ## Live demo
-The code editor, without the code compilation and execution server, is available on the below link. This portion of the IDE run completely client-side and will not send you code to the server. You can turn it into a complete IDE experience with syntax error highlighting, compilation, execution and test runner if you start the compiler web service component on your own machine.
+The code editor is available on the below link. It runs completely client-side and will not send you code to any server.
+Please note that this demo does not include the Web API Compiler component, so some features like syntax error highlighting, compilation, code execution and test runners will not be available. However, you can turn it into a complete IDE experience if you simply start the Web API Compiler service component on your own machine.
 
 https://andrzejolszak.github.io/picat-blazor-monaco-ide/PicatBlazorMonaco/publish/wwwroot/
 
