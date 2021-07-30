@@ -18,7 +18,7 @@ The editor is based on 2 components:
    Please note that you can still use the front-end alone for code editing, however you will not be able to compile and run programs.
 
 ## Running the IDE
-You have multiple option for how to use the IDE:
+You have several options for how to host the IDE:
 - You can use the Live demo as is, and just start the compiler web service on your machine to get the full IDE experience
 - Build the sources using VisualStudio and .net Core 5, and start from VS
 - Run the attached Windows release binaries
