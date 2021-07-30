@@ -11,34 +11,19 @@ Please note that this demo does not include the Web API Compiler component, so s
 
 https://andrzejolszak.github.io/picat-blazor-monaco-ide/PicatBlazorMonaco/publish/wwwroot/
 
-## Features
-Some of the features provided by the editor:
-- Syntax highlighting
-- Code completion with documentation for the built-in APIs (CTRL+Space)
-- Various standard editor features like indentation helpers, occurences highlighting, search, etc.
-- Several pre-defined code examples
-- Compilation/execution of code via the associated service
-- You can define custom links to this editor by inserting your code as UrlEncoded value of the 'code' parameter like in the below example:
-  https://localhost:5001?code=foo+%3D%3E+bar.%0D%0Abar+%3D%3E+println(hello).
-
 ## Technical details
 The editor is based on 2 components:
 1. The front-end page: this where the core editing experience resides. It's built using Blazor and Monaco, and runs using client-side WASM.
-2. The Web Api compiler service. A thin wrapper around the Picat compiler command line program. It's task is to forward code to the compile to compile and run programs.
-   Please note that you can still use the front end for basic editing even if you can't connect to a compiler service, however you will not be able to compile and run programs.
-
-## Caveats:
-- Currently only tested on Windows. Though it's built on .net core, so should be possible to build for Linux/Mac with minimal or no code changes. If you want to contribute a non-Windows build or a Windows Docker image for the server, please send me a PR or a link to your builds.
-- Currently the Web API compiler service comes bundled with the Windows compiler - using on Linux/Mac would require the respective compiler version to be included. As a sidenote, the service implementation is very simple it's just a HTTP server that forwards request parameters to the compiler and returns the compiler outputs - it would be definitely possible to rewrite it in another language in an evening or two.
-- Currently the Web API compiler service is not safe to be exposed on the network where anybody can run arbitrary code on it. Please only use on localhost or on trusted networks.
+2. The Web Api compiler service. A thin wrapper around the Picat compiler command line program. It's task is to forward code to the compiler to parse, compile and run programs.
+   Please note that you can still use the front-end alone for code editing, however you will not be able to compile and run programs.
 
 ## Running the IDE
 You have multiple option for how to use the IDE:
 - You can use the Live demo as is, and just start the compiler web service on your machine to get the full IDE experience
-- Build the sources using VisualStudio and .net Core 5, and run from VS
+- Build the sources using VisualStudio and .net Core 5, and start from VS
 - Run the attached Windows release binaries
 
-## Feature playground
+## Features playground
 The editor comes with an example that showcases the major features:
 
     % Welcome to the Picat editor based on Blazor and Monaco!
@@ -114,3 +99,8 @@ The editor comes with an example that showcases the major features:
     % Reporting errors:
     % Please report any errors to the githu repository at: https://github.com/andrzejolszak/picat-blazor-monaco-ide
     % If possible, please include the contents of the JS console log after you have triggered the error (F12, or Developers tools in most browsers)
+    
+## Caveats:
+- Currently only tested on Windows. Though it's built on .net core, so should be possible to build for Linux/Mac with minimal or no code changes. If you want to contribute a non-Windows build or a Windows Docker image for the server, please send me a PR or a link to your builds.
+- Currently the Web API compiler service comes bundled with the Windows compiler - using on Linux/Mac would require the respective compiler version to be included. As a sidenote, the service implementation is very simple it's just a HTTP server that forwards request parameters to the compiler and returns the compiler outputs - it would be definitely possible to rewrite it in another language in an evening or two.
+- Currently the Web API compiler service is not safe to be exposed on the network where anybody can run arbitrary code on it. Please only use on localhost or on trusted networks.
