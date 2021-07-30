@@ -1,5 +1,5 @@
 # picat-blazor-monaco-ide
-Web IDE for the Picat programming language based on .net Blazor and Monaco
+Web IDE for the Picat programming language based on .net Blazor and Monaco.
 
 This editor aims to aid in learning Picat syntax and editing Picat programs.
 
