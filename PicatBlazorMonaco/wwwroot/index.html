@@ -201,6 +201,18 @@
         function setDotNetHelper(helper) {
             window.dotNetHelper = helper;
         }
+
+        window.onbeforeunload = function (evt) {
+
+            var message = 'Are you sure you want to leave this editor?';
+            if (typeof evt == 'undefined') {//IE 
+                evt = window.event;
+            }
+            if (evt) {
+                evt.returnValue = message;
+            }
+            return message;
+        }
     </script>
 </body>
 

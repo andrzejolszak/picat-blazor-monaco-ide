@@ -31,7 +31,7 @@ main => foo.
 
 % Syntax highlighting and basic operations:
 % The typical editing operations known from modern code editors are available, this includes:
-% copy-paste, undo, auto-intendation on Enter, selection highlighting, Alt+Shift+Click block editing, Ctrl+F search, etc.
+% copy-paste, undo, auto-intendation on Enter, selection highlighting, Alt+Shift+Click block editing, Ctrl+F search, move line Alt+Up/Down etc.
 % You can try some of them by editing the below code:
 foo() => bar,
          bar, bar.
@@ -78,6 +78,7 @@ dar =>
 % Unit tests are a great way to gain confidence in the individual pieces of your program, and ensure that any refactorings
 % or additions of new features do not break the existing logic.
 % Tests are executed in a randomized order to prevent sequence-dependence, and their total execution time is limited to 15s.
+% You can double-click a test name to navigate to it's source code.
 % Below you can find some example tests, press 'Run All' in the Tests panel to run them:
 test_foo => foo.
 test_true.
@@ -788,116 +789,70 @@ handle(E) =>
 
         public const string LanguageIntroduction = @"%%% Based on: http://retina.inf.ufsc.br/picat_guide/
 
+import cp.
+
 %%% Data Types:
 
-V1 = X1, V2 = _ab, V3 = _       % variables  
+test_variables => V1 = X1, V2 = _ab, V3 = _.
 
-N1 = 12, N2 = 0xf3, N3 = 1.0e8  % numbers  
+test_numbers => N1 = 12, N2 = 0xf3, N3 = 1.0e8.
  
-A1 = x1, A2 = '_AB', A3 = ''    % atoms  
+test_atoms => A1 = x1, A2 = '_AB', A3 = ''.
  
-L = [a,b,c,d]                   % a list  
+test_lists => L = [a,b,c,d].
  
-write(""hello""++""picat"")         % strings  
 % [h, e, l, l, o, p, i, c, a, t]
+test_strings => write(""hello""++""picat"").
 
-print(""hello""++""picat"")
 % hellopicat
+test_strings2 => print(""hello""++""picat"").
 
-writef(""%s"",""hello""++""picat"")   % formatted write
 % hellopicat
+test_formatted_write => writef(""%s"",""hello""++""picat"").
 
-writef(""%-5d %5.2f"",2,2.0)      % formatted write  
-% 2      2.00  
+test_structure => S = $point(1.0,2.0).
 
-S = $point(1.0,2.0)             % a structure
-
-S = new_struct(point,3)         % create a structure
 % S = point(_3b0, _3b4, _3b8)
+% Name = point
+% Len = 3
+test_structure2 => S = new_struct(point,3), Name = name(S), Len = length(S),  Name = S.name, Len = S.length.
 
-A = {a,b,c,d}                   % an array
+test_array => A = {a,b,c,d}.
 
-A = new_array(3)                % create an array
-% A = { _3b0, _3b4, _3b8 }
+test_array2 => S = new_array(3), S[1] = 11, D2 = length(S), D2 = S.length.
 
-M = new_map([one=1, two=2])      % create a map
 % M = (map)[two = 2, one = 1]
+test_map => M = new_map([one=1, two=2]), put(M,three,3), Three = get(M,three), M.put(one,1), One = M.get(one).
 
-M = new_set([one, two, three])    % create a map set
 % M = (map)[two, one, three]
+test_set => M = new_set([one, two, three]), put(M,three), has_key(M,three), M.put(three).
 
-X = 1..2..10                    % ranges
 % X = [1, 3, 5, 7, 9]
+test_range => X = 1..2..10.
 
-X = 1..5  
 % X = [1,2,3,4,5]
+test_range2 => X = 1..5.
 
-integer(5)  
-% yes  
- 
-real(5)  
-% no  
- 
-var(X)  
-% yes  
- 
-X=5, var(X)  
-% no  
- 
-5 != 2+2  
-% yes  
+test_datatype_checks => integer(5), not real(5), var(X), Y=5, not var(Y), 5 != 2+2.
  
 %%% Calling Conventions:
 
-X = to_binary_string(5)  
-% X = ['1','0','1']  
+% X = ['1','0','1']
+test_callingconvention1 => X = to_binary_string(5).
  
-L = [a,b,c,d], X = L[2]  
-% X = b  
+% X = b
+test_callingconvention2 => L = [a,b,c,d], X = L[2].
  
-L = [(A,I) : A in [a,b], I in 1..2].  
 % L = [(a,1),(a,2),(b,1),(b,2)]  
+test_callingconvention3 => L = [(A,I) : A in [a,b], I in 1..2].  
  
-put_attr(X,one,1), One = get_attr(X,one)  % attributed var  
 % One = 1  
- 
-S = new_struct(point,3), Name = name(S), Len = length(S)  
-% S = point(_3b0,_3b4,_3b8)  
-% Name = point  
-% Len = 3  
- 
-S = new_array(2,3), S[1,1] = 11, D2 = length(S[2])  
-% S = {{11,_93a0,_93a4},{_938c,_9390,_9394}}  
-% D2 = 3  
- 
-M = new_map(), put(M,one,1), One = get(M,one)  
-% One = 1  
- 
-M = new_set(), put(M,one), has_key(M,one)
+test_attributedVars => put_attr(X,one,1), One = get_attr(X,one).
 
-X = 5.to_binary_string()  
-% X = ['1','0','1']  
- 
-X = 5.to_binary_string().length  
-% X = 3  
- 
-X.put(one,1), One = X.get(one)  
-% One = 1  
- 
-X = math.pi  
-% X=3.14159  
- 
-S = new_struct(point,3), Name = S.name, Len = S.length  
-% S = point(_3b0,_3b4,_3b8)  
-% Name = point  
-% Len = 3  
- 
-S = new_array(2,3), S[1,1] = 11, D2 = S[2].length  
-% S = {{11,_93a0,_93a4},{_938c,_9390,_9394}}  
-% D2 = 3  
- 
-M = new_map(), M.put(one,1), One = M.one.  
-% One = 1
+test_chained_call => X = 5.to_binary_string().length.
+
+% X=3.14159
+test_math => X = math.pi.
 
 %%% Defining Predicates:
 
@@ -991,10 +946,8 @@ edit([X|Xs],Ys,D) =>       % delete
     D = D1+1.
 
 %%% Constraints:
-
-import cp.  
  
-go =>  
+test_constraint =>  
     Vars = [S,E,N,D,M,O,R,Y],  % generate variables  
     Vars :: 0..9,  
     all_different(Vars),     % generate constraints  
@@ -1007,26 +960,26 @@ go =>
 
 %%% Higher-Order Calls:
 
-S = $member(X), call(S,[1,2,3])  
 % X = 1;  
 % X = 2;  
 % X = 3;  
 % no  
+test_higher_order => S = $member(X), call(S,[1,2,3]).
  
-L = findall(X,member(X,[1,2,3])).  
 % L = [1,2,3]  
- 
-Z = apply('+',1,2)  
+test_findall => L = findall(X,member(X,[1,2,3])).
+
 % Z = 3
+test_apply => Z = apply('+',1,2), Z = 3.
 
 %%% Prebuilt Maps:
 
-go ?=>  
+test_prebuilt_map1 ?=>  
     get_heap_map(h1).put(one,1),  
     get_global_map(g1).put(one,1),  
-    get_table_map(t1).put(one,1),  
-    fail.  
-go =>  
+    get_table_map(t1).put(one,1).
+
+test_prebuilt_map2 =>  
     if (get_heap_map(h1).has_key(one)) then  
        writef(""heap map h1 has key%n"")  
     else  
