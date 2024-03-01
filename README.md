@@ -1,5 +1,5 @@
 # picat-blazor-monaco-ide
-Web IDE for the Picat programming language based on .net Blazor and Monaco. It provides common moder code editor features like syntax highlighting, code completion with documentation preview (CTRL+Space), indentation helpers, occurences highlighting, search, etc. and compilation/execution of code via an associated compiler wrapper service.
+Web IDE for the Picat programming language based on .net Blazor and Monaco. It provides common modern code editor features like syntax highlighting, code completion with documentation preview (CTRL+Space), indentation helpers, occurences highlighting, search, etc. and compilation/execution of code via an associated compiler wrapper service.
 
 This editor aims to aid in learning Picat syntax and editing Picat programs.
 
