@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 using static PicatBlazorMonaco.Ast.DeclarationParser;
 
 namespace Tests
@@ -27,7 +26,6 @@ namespace Tests
         [InlineData("foo(a)-->a.")]
         [InlineData("foo=1.")]
         [InlineData("foo(N) = F => true.")]
-        [InlineData("foo=1.")]
         [InlineData("import cp, ds.\r\nfoo=1.")]
         [InlineData("module bar.\r\nfoo=1.")]
         [InlineData("private\r\nfoo([],Acc,Sum) => Sum = Acc.")]

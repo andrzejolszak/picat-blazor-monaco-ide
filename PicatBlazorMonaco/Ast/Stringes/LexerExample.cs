@@ -49,22 +49,22 @@ namespace LexerExample
             Whitespace
         }
 
-        static void Tokenize(string[] args)
-        {
-            Console.Title = "Stringes Lexer Example";
-
-            var origText = "20 * 3.14 / (5 + 11) ^ 2";
-
-            Console.WriteLine("ORIGINAL:\n");
-            Console.WriteLine(origText);
-            Console.WriteLine("\nTOKENS:\n");
-
-            foreach (var token in lexer.Tokenize(origText))
-            {
-                Console.WriteLine(token);
-            }
-
-            Console.ReadKey();
-        }
+        // static void Tokenize(string[] args)
+        // {
+        //     Console.Title = "Stringes Lexer Example";
+        // 
+        //     var origText = "20 * 3.14 / (5 + 11) ^ 2";
+        // 
+        //     Console.WriteLine("ORIGINAL:\n");
+        //     Console.WriteLine(origText);
+        //     Console.WriteLine("\nTOKENS:\n");
+        // 
+        //     foreach (var token in lexer.Tokenize(origText))
+        //     {
+        //         Console.WriteLine(token);
+        //     }
+        // 
+        //     Console.ReadKey();
+        // }
     }
 }

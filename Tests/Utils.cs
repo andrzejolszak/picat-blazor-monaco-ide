@@ -1,11 +1,11 @@
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
-using PlaywrightSharp;
-using PlaywrightSharp.Chromium;
+using Microsoft.Playwright;
 using System;
 using System.IO;
 using System.Threading.Tasks;
 using Xunit;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace ProjectionalBlazorMonaco.Tests
 {
@@ -33,7 +33,7 @@ namespace ProjectionalBlazorMonaco.Tests
 
             text = text.Replace("\'", "");
 
-            string val = (await page.GetInnerTextAsync("div.lines-content")).Replace("·", " ").Replace("\n", "\r\n");
+            string val = (await page.Locator("div.lines-content").InnerTextAsync()).Replace("·", " ").Replace("\n", "\r\n");
             int idx = val.IndexOf(text);
             idx.Should().BeGreaterOrEqualTo(0, val);
 
@@ -50,13 +50,13 @@ namespace ProjectionalBlazorMonaco.Tests
             await page.ClickAsync("#sample-code-editor-123");
         }
 
-        public static async Task<IPage> EnsureLoaded(this (IChromiumBrowser, DevHostServerFixture) browser, int? exampleToLoad = null)
+        public static async Task<IPage> EnsureLoaded(this (IBrowser, DevHostServerFixture) browser, int? exampleToLoad = null)
         {
             var page = await browser.Item1.NewPageAsync();
             page.PageError += Page_PageError;
             page.Console += Page_Console;
 
-            await page.GoToAsync(browser.Item2.RootUri.AbsoluteUri + (exampleToLoad.HasValue ? $"{exampleToLoad}" : string.Empty));
+            await page.GotoAsync(browser.Item2.RootUri.AbsoluteUri + (exampleToLoad.HasValue ? $"{exampleToLoad}" : string.Empty));
             await page.WaitForSelectorAsync("#sample-code-editor-123");
             await page.ClickAsync("#sample-code-editor-123");
             await page.Press("Control+Home");
@@ -64,17 +64,17 @@ namespace ProjectionalBlazorMonaco.Tests
             return page;
         }
 
-        private static void Page_Console(object sender, ConsoleEventArgs e)
+        private static void Page_Console(object sender, IConsoleMessage e)
         {
-            if (e.Message.Type != "debug")
+            if (e.Type != "debug")
             {
-                Console.WriteLine(e.Message.Text);
+                Console.WriteLine(e.Text);
             }
         }
 
-        private static void Page_PageError(object sender, PageErrorEventArgs e)
+        private static void Page_PageError(object sender, string e)
         {
-            Console.WriteLine(e.Message);
+            Console.WriteLine(e);
         }
 
         /// <summary>
@@ -162,7 +162,9 @@ namespace ProjectionalBlazorMonaco.Tests
 
         public static async Task Type(this IPage page, string text)
         {
-            await page.TypeAsync("div.lines-content", text);
+            await page.Locator("div.lines-content").PressSequentiallyAsync(text);
+            // page.FillAsync -> to fill values in forms
+            // page.PressAsync -> To press a special key, like <c>Control</c> or <c>ArrowDown</c>
         }
     }
 }

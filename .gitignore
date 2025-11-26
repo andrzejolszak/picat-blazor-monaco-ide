@@ -12,3 +12,8 @@
 /PicatBlazorMonaco/bin/Debug/net5.0
 /Tests/bin/Debug/net5.0
 /.vs
+/PicatBlazorMonaco/bin
+/Tests/bin
+/WebApiCompiler/bin/Debug
+/PicatBlazorMonaco/Properties/PublishProfiles/Release.pubxml.user
+/PicatBlazorMonaco/PicatBlazorMonaco.csproj.user

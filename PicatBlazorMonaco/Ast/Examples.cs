@@ -193,7 +193,7 @@ phrase(P, P2, L) :-
     call(Goal).";
 
         public const string SeveralExamples = @"/* Several examples in Picat */
-/**** begin file exs.pi ****/
+/*** begin file exs.pi ***/
 import cp, planner.   
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -785,7 +785,7 @@ handle(E) =>
     writeln(E),
     throw(E).  % just re-throw it
 
-/**** end file exs.pi ****/";
+/* end file exs.pi */";
 
         public const string LanguageIntroduction = @"%%% Based on: http://retina.inf.ufsc.br/picat_guide/
 

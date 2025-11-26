@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Configuration;
-using PlaywrightSharp;
+using Microsoft.Playwright;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -22,7 +22,7 @@ namespace ProjectionalBlazorMonaco.Tests
         public async Task ReadonlyNode()
         {
             using var playwright = await Playwright.CreateAsync();
-            await using var browser = await playwright.Chromium.LaunchAsync(headless: true);
+            await using var browser = await playwright.Chromium.LaunchAsync();
 
             var page = await (browser, _server).EnsureLoaded(1);
             await page.AssertTextContains("'1. Read-only nodes:");
@@ -46,7 +46,7 @@ namespace ProjectionalBlazorMonaco.Tests
         public async Task EditableTextNode()
         {
             using var playwright = await Playwright.CreateAsync();
-            await using var browser = await playwright.Chromium.LaunchAsync(headless: true);
+            await using var browser = await playwright.Chromium.LaunchAsync();
 
             var page = await (browser, _server).EnsureLoaded(2);
             await page.AssertTextContains("'2. Editable nodes:");
@@ -81,7 +81,7 @@ namespace ProjectionalBlazorMonaco.Tests
         public async Task SynchronizedEditableTextNode()
         {
             using var playwright = await Playwright.CreateAsync();
-            await using var browser = await playwright.Chromium.LaunchAsync(headless: true);
+            await using var browser = await playwright.Chromium.LaunchAsync();
 
             var page = await (browser, _server).EnsureLoaded(3);
             await page.AssertTextContains("'3. Synchronized");
@@ -99,7 +99,7 @@ namespace ProjectionalBlazorMonaco.Tests
         public async Task HoleNode()
         {
             using var playwright = await Playwright.CreateAsync();
-            await using var browser = await playwright.Chromium.LaunchAsync(headless: true);
+            await using var browser = await playwright.Chromium.LaunchAsync();
 
             var page = await (browser, _server).EnsureLoaded(4);
             await page.AssertTextContains("'4. Hole nodes");
@@ -138,7 +138,7 @@ namespace ProjectionalBlazorMonaco.Tests
         public async Task ReferenceNode()
         {
             using var playwright = await Playwright.CreateAsync();
-            await using var browser = await playwright.Chromium.LaunchAsync(headless: true);
+            await using var browser = await playwright.Chromium.LaunchAsync();
 
             var page = await (browser, _server).EnsureLoaded(5);
             await page.AssertTextContains("'5. Reference nodes");
@@ -162,7 +162,7 @@ namespace ProjectionalBlazorMonaco.Tests
 
             await page.AssertTextContains("an existing EditableTextNode.y◦ is a Hole for ReferenceNode");
 
-            await page.ClickAsync("text=an", modifiers: new PlaywrightSharp.Input.Modifier[] { PlaywrightSharp.Input.Modifier.Control });
+            await page.ClickAsync("text=an", new PageClickOptions { Modifiers = new [] { KeyboardModifier.Control } });
             await page.AssertTextContains("that can refer to 'an existing EditableTextNode");
         }
 
@@ -170,7 +170,7 @@ namespace ProjectionalBlazorMonaco.Tests
         public async Task EnumNode()
         {
             using var playwright = await Playwright.CreateAsync();
-            await using var browser = await playwright.Chromium.LaunchAsync(headless: true);
+            await using var browser = await playwright.Chromium.LaunchAsync();
 
             var page = await (browser, _server).EnsureLoaded(6);
             await page.AssertTextContains("'6. Enum nodes");
@@ -202,7 +202,7 @@ namespace ProjectionalBlazorMonaco.Tests
         public async Task ToggleNode()
         {
             using var playwright = await Playwright.CreateAsync();
-            await using var browser = await playwright.Chromium.LaunchAsync(headless: true);
+            await using var browser = await playwright.Chromium.LaunchAsync();
 
             var page = await (browser, _server).EnsureLoaded(7);
             await page.AssertTextContains("'7. Toggle nodes");
@@ -224,7 +224,7 @@ namespace ProjectionalBlazorMonaco.Tests
         public async Task ListNode()
         {
             using var playwright = await Playwright.CreateAsync();
-            await using var browser = await playwright.Chromium.LaunchAsync(headless: true);
+            await using var browser = await playwright.Chromium.LaunchAsync();
 
             var page = await (browser, _server).EnsureLoaded(8);
             await page.AssertTextContains("'8. List nodes");

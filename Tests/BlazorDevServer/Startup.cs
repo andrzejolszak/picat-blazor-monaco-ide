@@ -18,6 +18,7 @@ namespace ProjectionalBlazorMonaco.Tests.BlazorDevServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRouting();
+            services.AddCors();
         }
 
         public void Configure(IApplicationBuilder app, IConfiguration configuration)
@@ -36,6 +37,13 @@ namespace ProjectionalBlazorMonaco.Tests.BlazorDevServer
             });
 
             app.UseRouting();
+
+            app.UseCors(x => x
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .SetIsOriginAllowed(origin => true) // allow any origin
+                                                    //.WithOrigins("https://localhost:44351")); // Allow only this origin can also have multiple origins separated with comma
+                .AllowCredentials()); // allow credentials
 
             app.UseEndpoints(endpoints =>
             {

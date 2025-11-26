@@ -3,4 +3,9 @@
 https://go.microsoft.com/fwlink/?LinkID=208121. 
 -->
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\Users\andrz\source\repos\picat-blazor-monaco-ide\PicatBlazorMonaco\bin\Release\net9.0\browser-wasm\publish\</_PublishTargetUrl>
+    <History>True|2025-11-26T21:00:34.8855342Z||;True|2025-11-26T21:46:45.6579210+01:00||;True|2025-11-26T17:57:38.5639293+01:00||;False|2025-11-26T17:53:12.2511353+01:00||;False|2025-11-26T17:52:29.9080168+01:00||;False|2025-11-26T17:50:06.0073034+01:00||;False|2025-11-26T17:49:24.2597939+01:00||;False|2025-11-26T17:48:16.9000404+01:00||;False|2025-11-26T17:47:59.4503413+01:00||;False|2025-11-26T17:47:48.5457748+01:00||;False|2025-11-26T16:52:02.7256973+01:00||;True|2025-11-26T14:13:59.8660767+01:00||;False|2025-11-26T14:13:47.0108126+01:00||;True|2025-11-26T14:10:56.6761203+01:00||;False|2025-11-26T14:10:31.7943541+01:00||;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
 </Project>

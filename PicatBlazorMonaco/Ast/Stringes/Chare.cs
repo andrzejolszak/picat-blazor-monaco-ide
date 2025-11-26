@@ -103,5 +103,25 @@ namespace Stringes
         {
             return !(chare == c);
         }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (ReferenceEquals(obj, null))
+            {
+                return false;
+            }
+
+            return (obj.GetType() == this.GetType()) && this._character == ((Chare)obj)._character;
+        }
+
+        public override int GetHashCode()
+        {
+            return this._character.GetHashCode();
+        }
     }
 }

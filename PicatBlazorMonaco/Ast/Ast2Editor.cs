@@ -1,26 +1,24 @@
 ﻿using BlazorMonaco;
-using BrowserInterop;
-using BrowserInterop.Extensions;
+using BlazorMonaco.Editor;
 using IntervalTree;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using PicatBlazorMonaco.Ast;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Ast2
 {
     public class Ast2Editor
     {
-        private readonly MonacoEditor _monacoEditor;
+        private readonly StandaloneCodeEditor _monacoEditor;
         private TextModel _model;
 
         private readonly IJSRuntime _jsRuntime;
-
+        private readonly ILogger _logger;
         private string[] _currentErrorDecors;
 
         private string[] _currentDeclarationDecors;
@@ -33,10 +31,11 @@ namespace Ast2
 
         public List<(string, bool?, int)> TestResults = new List<(string, bool?, int)>();
 
-        public Ast2Editor(MonacoEditor monacoEditor, IJSRuntime jsRuntime)
+        public Ast2Editor(StandaloneCodeEditor monacoEditor, IJSRuntime jsRuntime, ILogger logger)
         {
             this._monacoEditor = monacoEditor;
             this._jsRuntime = jsRuntime;
+            this._logger = logger;
         }
 
         public async Task Init()
@@ -47,16 +46,15 @@ namespace Ast2
             {
                 // Delay needed for the debugger to be able to attach...
                 await Task.Delay(5000);
-                WindowConsole.IsEnabled = true;
             }
-#else
-            WindowConsole.IsEnabled = false;
 #endif
 
             _model = await _monacoEditor.GetModel();
             await _model.PushEOL(EndOfLineSequence.CRLF);
             await _jsRuntime.InvokeVoidAsync(@"initializeCompletions");
             await RefreshCompletions();
+
+            this._logger?.LogInformation("Ast2Editor initialized!");
         }
 
         public static StandaloneEditorConstructionOptions GetEditorOptions()
@@ -74,16 +72,15 @@ namespace Ast2
             };
         }
 
-        public async Task ConsoleLog(string msg)
+        public void ConsoleLog(string msg)
         {
-            var window = await _jsRuntime.Window();
-            await window.Console.Log(msg);
+            this._logger?.LogInformation(msg);
         }
 
-        public async Task ConsoleError(string msg)
+        public void ConsoleError(string msg)
         {
-            var window = await _jsRuntime.Window();
-            await window.Console.Error(msg);
+            this._logger?.LogError(msg);
+
         }
 
         private async Task<Selection> GetSelection()
@@ -120,7 +117,7 @@ namespace Ast2
 
         public async Task SetAndRevealPosition(Position position)
         {
-            await _monacoEditor.SetPosition(position);
+            await _monacoEditor.SetPosition(position, "src_src");
             await _monacoEditor.RevealPositionInCenter(position);
         }
 

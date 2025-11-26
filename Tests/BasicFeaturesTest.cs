@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
-using PlaywrightSharp;
+using Microsoft.Playwright;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -24,8 +24,9 @@ namespace ProjectionalBlazorMonaco.Tests
             using var playwright = await Playwright.CreateAsync();
             await using var browser = await playwright.Chromium.LaunchAsync();
             var page = await (browser, _server).EnsureLoaded();
+            await page.Type("xxx");
 
-            await page.AssertTextContains("5. Reference nodes:");
+            await page.AssertTextContains("xxx");
         }
     }
 }

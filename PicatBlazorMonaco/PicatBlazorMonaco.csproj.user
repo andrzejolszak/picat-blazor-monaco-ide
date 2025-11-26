@@ -5,7 +5,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <ActiveDebugProfile>ProjectionalBlazorMonaco</ActiveDebugProfile>
-    <NameOfLastUsedPublishProfile>Release</NameOfLastUsedPublishProfile>
+    <NameOfLastUsedPublishProfile>C:\Users\andrz\source\repos\picat-blazor-monaco-ide\PicatBlazorMonaco\Properties\PublishProfiles\Github_pages.pubxml</NameOfLastUsedPublishProfile>
     <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
 </Project>
