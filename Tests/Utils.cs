@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Playwright;
 using System;
@@ -33,8 +34,22 @@ namespace ProjectionalBlazorMonaco.Tests
 
             text = text.Replace("\'", "");
 
-            string val = (await page.Locator("div.lines-content").InnerTextAsync()).Replace("·", " ").Replace("\n", "\r\n");
-            int idx = val.IndexOf(text);
+            string val = "";
+            int idx = 0;
+
+            for (int i = 0; i < 3; i++)
+            {
+                val = (await page.Locator("div.lines-content").InnerTextAsync()).Replace("·", " ").Replace("\n", "\r\n");
+                idx = val.IndexOf(text);
+
+                if (idx > 0)
+                {
+                    break;
+                }
+
+                await Task.Delay(100);
+            }
+            
             idx.Should().BeGreaterOrEqualTo(0, val);
 
             if (caretPosition >= 0)
@@ -56,7 +71,7 @@ namespace ProjectionalBlazorMonaco.Tests
             page.PageError += Page_PageError;
             page.Console += Page_Console;
 
-            await page.GotoAsync(browser.Item2.RootUri.AbsoluteUri + (exampleToLoad.HasValue ? $"{exampleToLoad}" : string.Empty));
+            await page.GotoAsync(browser.Item2.RootUri.AbsoluteUri +  (exampleToLoad.HasValue ? $"proj/{exampleToLoad}" : string.Empty));
             await page.WaitForSelectorAsync("#sample-code-editor-123");
             await page.ClickAsync("#sample-code-editor-123");
             await page.Press("Control+Home");
