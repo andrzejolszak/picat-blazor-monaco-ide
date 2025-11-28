@@ -196,6 +196,8 @@ phrase(P, P2, L) :-
 /*** begin file exs.pi ***/
 import cp, planner.   
 
+include otherFile.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% PREDICATES AND FUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -423,7 +425,7 @@ d(_,_,D) => D=0.
 % another version for summing up a list 
 sum_list_imp(L) = Sum =>
     S = 0,
-    foreach (X in L)
+    foreach (X in L, break(X > 999))
        S := S+X
     end,
     Sum = S.
@@ -634,7 +636,7 @@ queens(N) =>
 queens2(N, Q) =>
     Q = new_list(N),
     Q :: 1..N,
-    Q2 = [$Q[I]+I : I in 1..N],
+    Q2 = [$Q[I]+I : I in 1..N, break(I > 999)],
     Q3 = [$Q[I]-I : I in 1..N],
     all_different(Q),
     all_different(Q2),

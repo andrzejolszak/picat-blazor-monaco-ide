@@ -79,7 +79,7 @@ foo(P, L) :-
         public void LargeExample()
         {
             List<Declaration> res = DeclarationParser.ParseDeclarations(Examples.SeveralExamples);
-            res.Count.Should().Be(149);
+            res.Count.Should().Be(150);
 
             List<Reference> references = DeclarationParser.ParseReferences(Examples.SeveralExamples, res);
             references.Count.Should().Be(120);
