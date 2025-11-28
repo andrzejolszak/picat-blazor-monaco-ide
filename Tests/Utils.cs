@@ -1,17 +1,17 @@
 using FluentAssertions;
-using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Playwright;
 using System;
 using System.IO;
 using System.Threading.Tasks;
 using Xunit;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace ProjectionalBlazorMonaco.Tests
 {
     public static class Utils
     {
+        public static char NBSP = (char)160;
+
         public static string GetPublishLocation()
         {
             var config = new ConfigurationBuilder()
@@ -35,11 +35,11 @@ namespace ProjectionalBlazorMonaco.Tests
             text = text.Replace("\'", "");
 
             string val = "";
-            int idx = 0;
+            int idx = -1;
 
             for (int i = 0; i < 3; i++)
             {
-                val = (await page.Locator("div.lines-content").InnerTextAsync()).Replace("·", " ").Replace("\n", "\r\n");
+                val = (await page.Locator("div.lines-content").InnerTextAsync()).Replace(NBSP, ' ').Replace("·", " ").Replace("\n", "\r\n");
                 idx = val.IndexOf(text);
 
                 if (idx > 0)
@@ -73,6 +73,7 @@ namespace ProjectionalBlazorMonaco.Tests
 
             await page.GotoAsync(browser.Item2.RootUri.AbsoluteUri +  (exampleToLoad.HasValue ? $"proj/{exampleToLoad}" : string.Empty));
             await page.WaitForSelectorAsync("#sample-code-editor-123");
+            await page.WaitForSelectorAsync("div.lines-content");
             await page.ClickAsync("#sample-code-editor-123");
             await page.Press("Control+Home");
 

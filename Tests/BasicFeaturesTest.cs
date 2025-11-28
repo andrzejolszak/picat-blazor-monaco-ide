@@ -24,9 +24,9 @@ namespace ProjectionalBlazorMonaco.Tests
             using var playwright = await Playwright.CreateAsync();
             await using var browser = await playwright.Chromium.LaunchAsync();
             var page = await (browser, _server).EnsureLoaded();
-            await page.Type("xxx");
+            await page.Type("xxx y");
 
-            await page.AssertTextContains("xxx");
+            await page.AssertTextContains("xxx y");
         }
     }
 }

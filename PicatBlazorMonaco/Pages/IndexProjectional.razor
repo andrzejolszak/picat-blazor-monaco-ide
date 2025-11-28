@@ -59,7 +59,7 @@
 
     private async Task OnCursorPositionChanged(CursorPositionChangedEvent eventArg)
     {
-        if (eventArg.Source == "snippet")
+        if (eventArg.Source == "suggest")
         {
             TextModel m = await _editor.GetModel();
             const int guidLength = 36;

@@ -162,7 +162,7 @@ namespace ProjectionalBlazorMonaco.Tests
 
             await page.AssertTextContains("an existing EditableTextNode.y◦ is a Hole for ReferenceNode");
 
-            await page.ClickAsync("text=an", new PageClickOptions { Modifiers = new [] { KeyboardModifier.Control } });
+            await page.ClickAsync("text=an existing", new PageClickOptions { Modifiers = new [] { KeyboardModifier.Control } });
             await page.AssertTextContains("that can refer to 'an existing EditableTextNode");
         }
 

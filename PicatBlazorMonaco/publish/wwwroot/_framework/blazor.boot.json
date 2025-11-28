@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "PicatBlazorMonaco",
   "resources": {
-    "hash": "sha256-Agti4+0RP6dNY3q4s0SlTYh5FBOw3LQ3EDdG7qhn58E=",
+    "hash": "sha256-jG6AMndvufmUtt8MJMBpNoqGzm1SMzf3CT7tpng2qI4=",
     "fingerprinting": {
       "BlazorMonaco.98tzo6dc2v.wasm": "BlazorMonaco.wasm",
       "Microsoft.AspNetCore.Components.hfrojzi48k.wasm": "Microsoft.AspNetCore.Components.wasm",
@@ -47,7 +47,7 @@
       "System.t4d4s3f398.wasm": "System.wasm",
       "netstandard.a8ityksxu4.wasm": "netstandard.wasm",
       "System.Private.CoreLib.u4uf30shqc.wasm": "System.Private.CoreLib.wasm",
-      "PicatBlazorMonaco.vrwy6grxsi.wasm": "PicatBlazorMonaco.wasm",
+      "PicatBlazorMonaco.zlf6ym6ogt.wasm": "PicatBlazorMonaco.wasm",
       "dotnet.js": "dotnet.js",
       "dotnet.native.noby4tlk4d.js": "dotnet.native.js",
       "dotnet.native.qe75a9vfqn.wasm": "dotnet.native.wasm",
@@ -117,7 +117,7 @@
       "System.Threading.q2tgddxke7.wasm": "sha256-zncUNmLvW8+ubA+sqWx5FiQfdH+7iXKdHOZT34w96r0=",
       "System.t4d4s3f398.wasm": "sha256-fVP2BxRRKpBA0PmBbKxmO45bXDrAXVn1GthlDclLbeU=",
       "netstandard.a8ityksxu4.wasm": "sha256-dsyEclBZezfGVo9x/HgYPB3pdChcSs2JaHgPx1+aF28=",
-      "PicatBlazorMonaco.vrwy6grxsi.wasm": "sha256-lS/S2XGfpYuIB2Dfw3a6OQn9mnyz1X4mYS8ZFiW4QUs="
+      "PicatBlazorMonaco.zlf6ym6ogt.wasm": "sha256-eZG1g3M14UT6qt2c8zCiXs5FmEQcg1ePS/fCCL6SwdU="
     }
   },
   "cacheBootResources": true,
