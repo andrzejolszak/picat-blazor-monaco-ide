@@ -124,7 +124,7 @@ namespace PicatBlazorMonaco.Ast
                 prevIndex = helper.Index;
 
                 char cc = helper.Get();
-                if (cc == '.' && char.IsWhiteSpace(helper.Peek(1)))
+                if (cc == '.' && char.IsWhiteSpace(helper.Peek()))
                 {
                     helper--;
                     return args;
