@@ -192,7 +192,7 @@ phrase(P, P2, L) :-
     Goal =.. [P, P2, L,[]],
     call(Goal).";
 
-        public const string SeveralExamples = @"/* Several examples in Picat */
+        public const string SeveralExamples = @"/*; Several examples in Picat */
 /*** begin file exs.pi ***/
 import cp, planner.   
 
