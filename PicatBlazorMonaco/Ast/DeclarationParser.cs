@@ -12,7 +12,7 @@ namespace PicatBlazorMonaco.Ast
             public string Comment { get; set; }
             public int NameOffset { get; set; }
             public string Name { get; set; }
-            public List<Argument> Args { get; set; } = new List<Argument>();
+            public List<Argument> Args { get; set; } = new List<Argument>(0);
             public string Operator { get; set; }
             public string Body { get; set; }
             public bool IsFunction => this.Operator == "=";
@@ -39,6 +39,7 @@ namespace PicatBlazorMonaco.Ast
         {
             public Declaration FirstMatch { get; set; }
             public int NameOffset { get; set; }
+            public List<Argument> Args { get; set; } = new List<Argument>(0);
         }
 
         public static List<Declaration> ParseDeclarations(string input)
@@ -215,16 +216,16 @@ namespace PicatBlazorMonaco.Ast
 
                         helper.SkipWhiteSpace();
 
-                        int argsCount = 0;
+                        List<Argument> args = new List<Argument>(0);
                         if (helper.Peek() == '(')
                         {
-                            argsCount = ExtractArguments(helper).Count;
+                            args = ExtractArguments(helper);
                         }
 
-                        Declaration target = name.FirstOrDefault(x => x.Args.Count == argsCount);
+                        Declaration target = name.FirstOrDefault(x => x.Args.Count == args.Count);
                         if (target != null)
                         {
-                            res.Add(new Reference() { FirstMatch = target, NameOffset = offset });
+                            res.Add(new Reference() { FirstMatch = target, NameOffset = offset, Args = args });
                         }
                     }
                 }

@@ -78,13 +78,16 @@ namespace WebApi.Controllers
                 return $"Execution timed out after {timeoutSec}s";
             }
 
+            output = output.Trim().Replace("\r\n\r\n", "\r\n");
+            error = error.Trim().Replace("\r\n\r\n", "\r\n");
+
             System.IO.File.WriteAllText(fileName.Replace("req_", "resp_"), output + Environment.NewLine + Environment.NewLine + error);
 
             Console.WriteLine($"exit {exited} " + this.Configuration["status"]);
             Console.WriteLine($"Out: {output}");
             Console.WriteLine($"Err: {error}");
 
-            return ((error.Length > 0) ? (error.Replace("\r\n\r\n", "\r\n") + "\r\n") : "") + output;
+            return ((error.Length > 0) ? (error + "\r\n") : "") + output;
         }
     }
 }

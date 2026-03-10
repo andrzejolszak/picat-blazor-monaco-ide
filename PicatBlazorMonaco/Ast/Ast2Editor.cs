@@ -24,11 +24,11 @@ namespace Ast2
 
         private string[] _currentBuiltinReferenceDecors;
 
-        private List<DeclarationParser.Declaration> _currentDeclarations = new List<DeclarationParser.Declaration>();
-
         private IntervalTree<int, DeclarationParser.Reference> _currentReferences = new IntervalTree<int, DeclarationParser.Reference>();
 
         public List<(string, bool?, int)> TestResults = new List<(string, bool?, int)>();
+
+        public List<DeclarationParser.Declaration> Declarations = new();
 
         private BlazorMonaco.Languages.CompletionList _completionList = new();
         
@@ -196,13 +196,12 @@ namespace Ast2
             }
 
             List<DeclarationParser.Reference> references = new List<DeclarationParser.Reference>();
-            List<DeclarationParser.Declaration> declarations = new List<DeclarationParser.Declaration>();
             List <ModelDeltaDecoration> decors = new List<ModelDeltaDecoration>(1);
             this.TestResults.Clear();
             try
             {
-                declarations = DeclarationParser.ParseDeclarations(program);
-                foreach (DeclarationParser.Declaration decl in declarations)
+                this.Declarations = DeclarationParser.ParseDeclarations(program);
+                foreach (DeclarationParser.Declaration decl in this.Declarations)
                 {
                     Position pos = await _model.GetPositionAt(decl.NameOffset);
                     ModelDeltaDecoration d = new ModelDeltaDecoration
@@ -225,14 +224,13 @@ namespace Ast2
                     }
                 }
 
-                references = DeclarationParser.ParseReferences(program, declarations);
+                references = DeclarationParser.ParseReferences(program, this.Declarations);
             }
             finally
             {
                 this._currentDeclarationDecors = await _monacoEditor.DeltaDecorations(this._currentDeclarationDecors, decors.ToArray());
             }
 
-            this._currentDeclarations = declarations;
             this._currentReferences.Clear();
             foreach (DeclarationParser.Reference reff in references)
             {
@@ -311,7 +309,7 @@ namespace Ast2
             }
 
             DeclarationParser.Declaration prevDecl = null;
-            foreach (DeclarationParser.Declaration d in this._currentDeclarations)
+            foreach (DeclarationParser.Declaration d in this.Declarations)
             {
                 if (prevDecl != null && prevDecl.Name == d.Name && prevDecl.Args.Count == d.Args.Count && d.Comment == null)
                 {

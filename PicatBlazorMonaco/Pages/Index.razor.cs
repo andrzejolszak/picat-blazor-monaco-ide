@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Timers;
@@ -158,15 +159,15 @@ public partial class Index : ComponentBase
 
             string program = WebUtility.UrlEncode(orgProgram);
 
-            string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal={WebUtility.UrlEncode(goal)}&program={program}");
+            string result = await Http.GetStringAsync($@"http://{ServiceIP}/?goal={WebUtility.UrlEncode(goal)}&program={program}");
             this.StatusColor = "green";
-            int errors = await this._astEditor.UpdateErrors(s);
+            int errors = await this._astEditor.UpdateErrors(result);
             if (errors > 0 || printOutput)
             {
-                this.Output = DateTime.Now.ToLongTimeString() + "\r\nPicat> " + goal + "\r\n" + s;
+                this.Output = DateTime.Now.ToLongTimeString() + "\r\nPicat> " + goal + "\r\n" + result;
             }
 
-            return s;
+            return result;
         }
         catch (Exception ex)
         {
@@ -184,6 +185,35 @@ public partial class Index : ComponentBase
     {
         string orgProgram = await _editor.GetValue();
         string goal = Goal.Trim();
+
+        if (goal.EndsWith("."))
+        {
+            goal = goal.Substring(0, goal.Length - 1);
+        }
+
+        List<DeclarationParser.Reference> refs = DeclarationParser.ParseReferences(goal, this._astEditor.Declarations);
+        if (refs.Count > 0 && refs.First().FirstMatch.IsFunction)
+        {
+            orgProgram += "\r\nuserCmd_WebIdeReq ?=> R = " + goal + $", print(\"{goal} = \"), println(R), println(yes). userCmd_WebIdeReq => println(no).";
+        }
+        else
+        {
+            StringBuilder varsPrint = new();
+            if (refs.Count > 0)
+            {
+                foreach (DeclarationParser.Argument arg in refs.First().Args)
+                {
+                    if (arg.IsVar)
+                    {
+                        varsPrint.Append($"print(\"{arg.Text} = \"), println({arg.Text}), ");
+                    }
+                }
+            }
+
+            orgProgram += "\r\nuserCmd_WebIdeReq ?=> " + goal + $", {varsPrint}println(yes). userCmd_WebIdeReq => println(no).";
+        }
+
+        goal = "userCmd_WebIdeReq";
 
         _ = await Run(orgProgram, goal, true);
     }
