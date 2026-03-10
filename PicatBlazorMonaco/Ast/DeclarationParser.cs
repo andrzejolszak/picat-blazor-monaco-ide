@@ -12,9 +12,27 @@ namespace PicatBlazorMonaco.Ast
             public string Comment { get; set; }
             public int NameOffset { get; set; }
             public string Name { get; set; }
-            public List<string> Args { get; set; } = new List<string>();
+            public List<Argument> Args { get; set; } = new List<Argument>();
             public string Operator { get; set; }
             public string Body { get; set; }
+            public bool IsFunction => this.Operator == "=";
+
+            public bool IsFact => this.Operator == string.Empty && this.Body == string.Empty;
+        }
+
+        public class Argument
+        {
+            public int Offset { get; set; }
+
+            public string Text { get; set; }
+
+            public bool IsVar => char.IsUpper(this.Text[0]) || this.Text[0] == '_';
+
+            public bool IsAtom => char.IsLower(this.Text[0]) || this.Text[0] == '\'';
+
+            public bool IsAssignment => this.Text.Contains("=");
+
+            public bool IsCall => this.Text[0] != '(' && this.Text.Contains("(");
         }
 
         public class Reference
@@ -106,13 +124,13 @@ namespace PicatBlazorMonaco.Ast
             goto start;
         }
 
-        private static List<string> ExtractArguments(ParsingHelper helper)
+        private static List<Argument> ExtractArguments(ParsingHelper helper)
         {
             int lastPos;
             helper++;
             lastPos = helper.Index;
             int nesting = 1;
-            List<string> args = new List<string>();
+            List<Argument> args = new List<Argument>();
             int prevIndex = -1;
             while (helper.Remaining > 0 && nesting > 0)
             {
@@ -144,7 +162,7 @@ namespace PicatBlazorMonaco.Ast
                     string arg = helper.Extract(lastPos, helper.Index - 1).Trim();
                     if (arg != string.Empty)
                     {
-                        args.Add(arg);
+                        args.Add(new Argument { Offset = lastPos, Text = arg });
                         lastPos = helper.Index;
                     }
                 }
@@ -159,6 +177,7 @@ namespace PicatBlazorMonaco.Ast
             IEnumerable<IGrouping<string, Declaration>> byName = declarations.GroupBy(x => x.Name);
             HashSet<int> declarationOffsets = declarations.Select(x => x.NameOffset).ToHashSet();
 
+            // TODO: inefficient
             ParsingHelper helper = new ParsingHelper(input);
             foreach (IGrouping<string, Declaration> name in byName)
             {
@@ -222,7 +241,7 @@ namespace PicatBlazorMonaco.Ast
 
             helper.SkipWhiteSpace();
 
-            List<string> args = new List<string>();
+            List<Argument> args = new List<Argument>();
             if (helper.Peek() == '(')
             {
                 args = ExtractArguments(helper);

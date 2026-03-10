@@ -128,5 +128,26 @@ zar ?=> foo(a, 1).
             List<Reference> references = DeclarationParser.ParseReferences(program, res);
             references.Count.Should().Be(1);
         }
+
+        [InlineData("foo(1). x => foo(A).")]
+        [InlineData("foo. x => foo.")]
+        [InlineData("foo. x ?=> foo.")]
+        [InlineData("foo. x --> foo.")]
+        [InlineData("foo. x :- foo.")]
+        [InlineData("foo. x = foo.")]
+        [InlineData("foo. x(foo).")]
+        [InlineData("foo (2). x(foo(A)).")]
+        [InlineData("'_fo=o'(1). x => '_fo=o'(A).")]
+        [InlineData(" '_fo=o'. x => X = '_fo=o'.")]
+        [InlineData(" '_fo=o'. x => '_fo=o' =.. X.")]
+        [Theory]
+        public void References(string input)
+        {
+            List<Declaration> res = DeclarationParser.ParseDeclarations(input);
+            res.Should().HaveCount(2);
+            List<Reference> references = DeclarationParser.ParseReferences(input, res);
+            references.Should().HaveCount(1);
+            references[0].FirstMatch.Should().Be(res[0]);
+        }
     }
 }
