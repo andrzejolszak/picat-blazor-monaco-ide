@@ -31,6 +31,8 @@ namespace Ast2
 
         public List<(string, bool?, int)> TestResults = new List<(string, bool?, int)>();
 
+        private BlazorMonaco.Languages.CompletionList _completionList = new();
+
         public Ast2Editor(StandaloneCodeEditor monacoEditor, IJSRuntime jsRuntime, ILogger logger)
         {
             this._monacoEditor = monacoEditor;
@@ -51,7 +53,8 @@ namespace Ast2
 
             _model = await _monacoEditor.GetModel();
             await _model.PushEOL(EndOfLineSequence.CRLF);
-            await _jsRuntime.InvokeVoidAsync(@"initializeCompletions");
+            await _jsRuntime.InvokeVoidAsync(@"initializeMonaco");
+            await BlazorMonaco.Languages.Global.RegisterCompletionItemProvider(_jsRuntime, "picat", async (modelUri, position, context) => _completionList);
             await RefreshCompletions();
 
             this._logger?.LogInformation("Ast2Editor initialized!");
@@ -278,30 +281,48 @@ namespace Ast2
 
         public async Task RefreshCompletions()
         {
+            var completionList = new BlazorMonaco.Languages.CompletionList
+            {
+                Suggestions = new List<BlazorMonaco.Languages.CompletionItem>()
+            };
+
             List<object> jsCompletions = new List<object>();
             foreach ((string, string, string) o in BuiltIns.Operators)
             {
-                // Schema: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.languages.completionitem.html
-                dynamic compl = new System.Dynamic.ExpandoObject();
-                compl.label = o.Item1;
-                compl.insertText = o.Item1;
-                compl.detail = "[" + o.Item2 + "]";
-                compl.documentation = o.Item3;
-                compl.kind = CompletionItemKind.Operator;
+                BlazorMonaco.Languages.CompletionItem i = new BlazorMonaco.Languages.CompletionItem
+                {
+                    LabelAsString = o.Item1,
+                    InsertText = o.Item1,
+                    Detail = "[" + o.Item2 + "]",
+                    DocumentationAsString = o.Item3,
+                    Kind = BlazorMonaco.Languages.CompletionItemKind.Operator,
+                };
 
-                jsCompletions.Add(compl);
+                /*
+                    RangeAsObject = new BlazorMonaco.Range
+                    {
+                        StartLineNumber = 4,
+                        StartColumn = 3,
+                        EndLineNumber = 4,
+                        EndColumn = 7
+                    }
+                 */
+
+                completionList.Suggestions.Add(i);
             }
 
             foreach ((string, string, string) o in BuiltIns.Functions)
             {
-                dynamic compl = new System.Dynamic.ExpandoObject();
-                compl.label = o.Item1;
-                compl.insertText = o.Item1;
-                compl.detail = "[" + o.Item2 + "]";
-                compl.documentation = o.Item3;
-                compl.kind = CompletionItemKind.Function;
+                BlazorMonaco.Languages.CompletionItem i = new BlazorMonaco.Languages.CompletionItem
+                {
+                    LabelAsString = o.Item1,
+                    InsertText = o.Item1,
+                    Detail = "[" + o.Item2 + "]",
+                    DocumentationAsString = o.Item3,
+                    Kind = BlazorMonaco.Languages.CompletionItemKind.Function,
+                };
 
-                jsCompletions.Add(compl);
+                completionList.Suggestions.Add(i);
             }
 
             DeclarationParser.Declaration prevDecl = null;
@@ -318,17 +339,19 @@ namespace Ast2
                     target = $"{d.Name}({string.Join(", ", d.Args)})";
                 }
 
-                dynamic compl = new System.Dynamic.ExpandoObject();
-                compl.label = target;
-                compl.insertText = target;
-                compl.detail = "[User]";
-                compl.documentation = target + ":\r\n" + d.Comment;
-                compl.kind = CompletionItemKind.Value;
+                BlazorMonaco.Languages.CompletionItem i = new BlazorMonaco.Languages.CompletionItem
+                {
+                    LabelAsString = target,
+                    InsertText = target,
+                    Detail = "[User]",
+                    DocumentationAsString = target + ":\r\n" + d.Comment,
+                    Kind = BlazorMonaco.Languages.CompletionItemKind.Value,
+                };
 
-                jsCompletions.Add(compl);
+                completionList.Suggestions.Add(i);
             }
 
-            await _jsRuntime.InvokeVoidAsync(@"setCompletionsArray", jsCompletions);
+            this._completionList = completionList;
         }
     }
 }

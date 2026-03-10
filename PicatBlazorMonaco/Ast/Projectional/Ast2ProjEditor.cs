@@ -31,6 +31,7 @@ namespace Ast2
 
         public List<(Type, Func<Node>)> FactoryRegistry { get; } = new List<(Type, Func<Node>)>();
 
+        private BlazorMonaco.Languages.CompletionList _completionList = new();
         public Ast2ProjEditor(StandaloneCodeEditor monacoEditor, IJSRuntime jsRuntime)
         {
             this._monacoEditor = monacoEditor;
@@ -50,7 +51,8 @@ namespace Ast2
 
             TextModel m = await _monacoEditor.GetModel();
             await m.PushEOL(EndOfLineSequence.CRLF);
-            await _jsRuntime.InvokeVoidAsync(@"initializeCompletions");
+            await _jsRuntime.InvokeVoidAsync(@"initializeMonaco");
+            await BlazorMonaco.Languages.Global.RegisterCompletionItemProvider(_jsRuntime, "picat", async (modelUri, position, context) => _completionList);
             await Styles.CreateCssStyles(this._jsRuntime);
             await this.AddCommands();
         }
@@ -279,23 +281,27 @@ namespace Ast2
         private async Task RefreshCompletions()
         {
             List<AstAutocompleteItem> completions = await this.GetCompletions();
-            List<object> jsCompletions = new List<object>(completions.Count);
+            var completionList = new BlazorMonaco.Languages.CompletionList
+            {
+                Suggestions = new List<BlazorMonaco.Languages.CompletionItem>()
+            };
+            
             foreach (AstAutocompleteItem c in completions)
             {
+                BlazorMonaco.Languages.CompletionItem i = new BlazorMonaco.Languages.CompletionItem
+                {
+                    InsertText = c.Id,
+                    FilterText = c.SourceToMatch,
+                    LabelAsString = c.MenuText,
+                    Detail = c.Id,
+                    DocumentationAsString = c.DocTitle + " " + c.DocText,
+                    Kind = BlazorMonaco.Languages.CompletionItemKind.Function,
+                };
 
-                // Schema: https://microsoft.github.io/monaco-editor/api/interfaces/monaco.languages.completionitem.html
-                dynamic compl = new System.Dynamic.ExpandoObject();
-                compl.insertText = c.Id;
-                compl.filterText = c.SourceToMatch;
-                compl.label = c.MenuText;
-                compl.documentation = c.DocTitle + " " + c.DocText;
-                compl.kind = 1;
-                compl.detail = c.Id;
-
-                jsCompletions.Add(compl);
+                completionList.Suggestions.Add(i);
             }
 
-            await _jsRuntime.InvokeVoidAsync(@"setCompletionsArray", jsCompletions);
+            this._completionList = completionList;
         }
 
         public async Task HandleUserInputResult(UserInputResult res)

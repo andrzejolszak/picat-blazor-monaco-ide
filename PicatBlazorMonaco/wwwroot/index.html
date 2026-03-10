@@ -36,7 +36,7 @@
             document.getElementsByTagName('head')[0].appendChild(style);
         }
 
-        function initializeCompletions() {
+        function initializeMonaco() {
             monaco.languages.register({ id: 'picat' });
 
             // Register a tokens provider for the language
@@ -55,7 +55,7 @@
                 operators: [
                     "=", "!=", ">", ">=", "<", "<=", "=<", "..", "!",
                     ",", ";", ":", "::", ".", ". ",
-                    "=>", "?=>", "==", "!==", ":=", "|", "$", "@",
+                    "=>", "?=>", "==", "!==", ":=", "=..", "-->", ":-", "|", "$", "@",
                     "/' ", "' /", "˜", "ˆ", "<<", ">>",
                     "+", "-", "*", "**", "/", "/>", "/<", "ˆ",
                     "#=", "#!=", "#>", "#>=", "#<", "#<=", "#=<",
@@ -144,30 +144,6 @@
                 },
             });
 
-            // Define a new theme that contains only rules that match this language
-            monaco.editor.defineTheme('picatTheme', {
-                base: 'vs',
-                inherit: true,
-                rules: [
-                    { token: 'comment', foreground: '808080' },
-                    { token: 'keyword', foreground: 'AA00FF', fontStyle: 'bold' },
-                    { token: 'type', foreground: 'FFA500' },
-                    { token: 'annotation', foreground: 'FFA533' },
-                    { token: 'variable', foreground: '888800' },
-                ]
-            });
-
-            // Completions are declare to monaco through this global array as a workaround, because the API is not yet exposed by blazorMonaco
-            window.completionsArray = [];
-
-            monaco.languages.registerCompletionItemProvider('picat', {
-                provideCompletionItems: function (model, position) {
-                    return {
-                        suggestions: globalThis.completionsArray
-                    };
-                }
-            });
-
             monaco.languages.registerDefinitionProvider('picat', {
                 provideDefinition: async (model, position, token) => {
                     var defRange = await window.dotNetHelper.invokeMethodAsync('GetDefinitionRange', position);
@@ -182,10 +158,6 @@
                     }
                 }
             });
-        }
-
-        function setCompletionsArray(completions) {
-            window.completionsArray = completions;
         }
 
         function getWebDriver() {
