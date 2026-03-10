@@ -17,8 +17,6 @@ namespace Ast2
 
         private readonly IJSRuntime _jsRuntime;
 
-        private long _debugId = 0;
-
         /// <summary>
         /// Only nodes that have a View are added here, i.e. children-based nodes are not, but you can retrieve them
         /// through the parent relations.

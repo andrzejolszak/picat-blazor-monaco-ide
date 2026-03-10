@@ -272,7 +272,6 @@ namespace Ast2
                 Suggestions = new List<BlazorMonaco.Languages.CompletionItem>()
             };
 
-            List<object> jsCompletions = new List<object>();
             foreach ((string, string, string) o in BuiltIns.Operators)
             {
                 BlazorMonaco.Languages.CompletionItem i = new BlazorMonaco.Languages.CompletionItem
