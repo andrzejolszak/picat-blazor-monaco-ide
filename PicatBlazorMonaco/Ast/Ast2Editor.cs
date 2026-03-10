@@ -1,7 +1,6 @@
 ﻿using BlazorMonaco;
 using BlazorMonaco.Editor;
 using IntervalTree;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using PicatBlazorMonaco.Ast;
@@ -32,7 +31,7 @@ namespace Ast2
         public List<(string, bool?, int)> TestResults = new List<(string, bool?, int)>();
 
         private BlazorMonaco.Languages.CompletionList _completionList = new();
-
+        
         public Ast2Editor(StandaloneCodeEditor monacoEditor, IJSRuntime jsRuntime, ILogger logger)
         {
             this._monacoEditor = monacoEditor;
@@ -53,7 +52,7 @@ namespace Ast2
 
             _model = await _monacoEditor.GetModel();
             await _model.PushEOL(EndOfLineSequence.CRLF);
-            await _jsRuntime.InvokeVoidAsync(@"initializeMonaco");
+            await _jsRuntime.InvokeVoidAsync(@"initializePicat");
             await BlazorMonaco.Languages.Global.RegisterCompletionItemProvider(_jsRuntime, "picat", async (modelUri, position, context) => _completionList);
             await RefreshCompletions();
 
@@ -83,12 +82,6 @@ namespace Ast2
         public void ConsoleError(string msg)
         {
             this._logger?.LogError(msg);
-
-        }
-
-        private async Task<Selection> GetSelection()
-        {
-            return await this._monacoEditor.GetSelection();
         }
 
         public async Task<BlazorMonaco.Range> GetDefinition(Position pos)
@@ -127,13 +120,6 @@ namespace Ast2
         private async Task<Position> GetPositionAt(int offset)
         {
             return await _model.GetPositionAt(offset);
-        }
-
-
-        public async Task<int> GetSelectionStart(ElementReference element)
-        {
-            int pos = await _jsRuntime.InvokeAsync<int>("getSelectedStart", element);
-            return pos;
         }
 
         public async Task MoveToError(string line)
@@ -344,7 +330,7 @@ namespace Ast2
                     LabelAsString = target,
                     InsertText = target,
                     Detail = "[User]",
-                    DocumentationAsString = target + ":\r\n" + d.Comment,
+                    DocumentationAsString = target + "\r\n\r\n" + d.Comment,
                     Kind = BlazorMonaco.Languages.CompletionItemKind.Value,
                 };
 

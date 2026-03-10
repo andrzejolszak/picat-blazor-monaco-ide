@@ -36,8 +36,24 @@
             document.getElementsByTagName('head')[0].appendChild(style);
         }
 
-        function initializeMonaco() {
+        function initializePicat() {
             monaco.languages.register({ id: 'picat' });
+
+            // BlazorMonaco does not provide definition providers yet - need to register manually via JS:
+            monaco.languages.registerDefinitionProvider('picat', {
+                provideDefinition: async (model, position, token) => {
+                    var defRange = await window.dotNetHelper.invokeMethodAsync('GetDefinitionRange', position);
+                    if (!defRange) {
+                        return null;
+                    }
+                    else {
+                        return {
+                            uri: model.uri,
+                            range: defRange
+                        }
+                    }
+                }
+            });
 
             // Register a tokens provider for the language
             monaco.languages.setMonarchTokensProvider('picat', {
@@ -142,21 +158,6 @@
                         [/\/\/.*$/, 'comment'],
                     ],
                 },
-            });
-
-            monaco.languages.registerDefinitionProvider('picat', {
-                provideDefinition: async (model, position, token) => {
-                    var defRange = await window.dotNetHelper.invokeMethodAsync('GetDefinitionRange', position);
-                    if (!defRange) {
-                        return null;
-                    }
-                    else {
-                        return {
-                            uri: model.uri,
-                            range: defRange
-                        }
-                    }
-                }
             });
         }
 

@@ -85,7 +85,7 @@ namespace PicatBlazorMonaco.Ast
 
                     if (colonIndex > 0)
                     {
-                        entry = entry.Insert(colonIndex + 2, "\r\n");
+                        entry = entry.Remove(colonIndex, 1).Insert(colonIndex + 1, "\r\n\r\n");
                     }
 
                     Functions.Add((name, module, entry));

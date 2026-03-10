@@ -51,7 +51,6 @@ namespace Ast2
 
             TextModel m = await _monacoEditor.GetModel();
             await m.PushEOL(EndOfLineSequence.CRLF);
-            await _jsRuntime.InvokeVoidAsync(@"initializeMonaco");
             await BlazorMonaco.Languages.Global.RegisterCompletionItemProvider(_jsRuntime, "picat", async (modelUri, position, context) => _completionList);
             await Styles.CreateCssStyles(this._jsRuntime);
             await this.AddCommands();

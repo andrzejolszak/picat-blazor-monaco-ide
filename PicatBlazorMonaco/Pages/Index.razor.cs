@@ -5,18 +5,18 @@ using BlazorMonaco;
 using BlazorMonaco.Editor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using PicatBlazorMonaco.Ast;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Timers;
-using System.Net.Http;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.WebUtilities;
 
 public partial class Index : ComponentBase
 {
@@ -242,7 +242,7 @@ public partial class Index : ComponentBase
 
     private async Task OutputDoubleClick(MouseEventArgs mouse)
     {
-        int pos = await _astEditor.GetSelectionStart(this.outputElement);
+        int pos = await _jsRuntime.InvokeAsync<int>("getSelectedStart", this.outputElement);
         var lineIndex = this.Output.Take(pos).Count(c => c == '\n');
         string[] lines = this.Output.Split("\n");
         await _astEditor.MoveToError(lines[lineIndex]);
