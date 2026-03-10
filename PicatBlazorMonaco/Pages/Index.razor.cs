@@ -269,12 +269,12 @@ public partial class Index : ComponentBase
 if (catch({test.Item1},_,writeln('{test.Item1}-'))) then writeln('{test.Item1}+') else writeln('{test.Item1}-') end,";
         }
 
-        string res = await Run(orgProgram + testAll.Substring(0, testAll.Length - 1) + ".", "testt___all", false);
+        string res = await Run(orgProgram + testAll.Substring(0, testAll.Length - 1) + ".", "testt___all", true);
 
         List<(string, bool?, int)> newTestResults = new List<(string, bool?, int)>();
         foreach (var test in this._astEditor.TestResults)
         {
-            newTestResults.Add((test.Item1, (bool?)!res.Contains(test.Item1 + "-"), test.Item3));
+            newTestResults.Add((test.Item1, res.Contains(test.Item1 + "+"), test.Item3));
         }
 
         this._astEditor.TestResults = newTestResults;

@@ -1,10 +1,9 @@
 ﻿using System;
-using System.IO;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Cors;
+using System.Threading;
 
 namespace WebApi.Controllers
 {
@@ -16,6 +15,8 @@ namespace WebApi.Controllers
         // requires using Microsoft.Extensions.Configuration;
         private readonly IConfiguration Configuration;
 
+        private static int _logRotator = 0;
+
         public ValuesController(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -25,11 +26,12 @@ namespace WebApi.Controllers
         [EnableCors]
         public string Get(string goal, string program)
         {
+            Interlocked.Increment(ref _logRotator);
+
             string executable = this.Configuration["Executable"];
             int timeoutSec = int.Parse(this.Configuration["TimeoutSeconds"]);
 
-            string sender = "s" + (HttpContext?.Connection.Id.ToString() ?? "null");
-            string fileName = @".\requests\" + sender + ".pi";
+            string fileName = @".\requests\req_" + (_logRotator % 10) + ".pi";
             System.IO.Directory.CreateDirectory(@".\requests\");
             System.IO.File.WriteAllText(fileName, program);
 
@@ -52,7 +54,7 @@ namespace WebApi.Controllers
             }
             else if (goal == "--c")
             {
-                process.StartInfo.Arguments = $"-g compile({sender}) " + fileName;
+                process.StartInfo.Arguments = $"-g compile({goal}) " + fileName;
             }
             else
             {
@@ -76,7 +78,7 @@ namespace WebApi.Controllers
                 return $"Execution timed out after {timeoutSec}s";
             }
 
-            System.IO.File.Delete(fileName);
+            System.IO.File.WriteAllText(fileName.Replace("req_", "resp_"), output + Environment.NewLine + Environment.NewLine + error);
 
             Console.WriteLine($"exit {exited} " + this.Configuration["status"]);
             Console.WriteLine($"Out: {output}");
