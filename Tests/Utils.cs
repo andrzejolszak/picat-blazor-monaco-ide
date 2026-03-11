@@ -84,13 +84,20 @@ namespace ProjectionalBlazorMonaco.Tests
         {
             if (e.Type != "debug")
             {
+                if (e.Text.Contains("CORS policy"))
+                {
+                    throw new InvalidOperationException("CORS policy issues - please make sure to publish the project using the UnitTests config and while using <base href=\"/\" />: " + e.Text);
+                }
+
                 Console.WriteLine(e.Text);
+                throw new InvalidOperationException(e.Text);
             }
         }
 
         private static void Page_PageError(object sender, string e)
         {
             Console.WriteLine(e);
+            throw new InvalidOperationException(e);
         }
 
         /// <summary>
