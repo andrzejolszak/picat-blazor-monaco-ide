@@ -25,7 +25,7 @@ public partial class Index : ComponentBase
     private bool _initializedSuggestionDetail = false;
     private List<(string, string)> Samples { get; set; } = Examples.Samples;
     private string ServiceIP { get; set; } = "localhost:8701";
-    private string StatusColor { get; set; }
+    private MudBlazor.Color StatusColor { get; set; } = MudBlazor.Color.Primary;
     private string Goal { get; set; } = "main.";
     private string Output { get; set; }
     private Ast2Editor _astEditor { get; set; }
@@ -98,7 +98,7 @@ public partial class Index : ComponentBase
         try
         {
             this.Output = "Working...";
-            this.StatusColor = "gray";
+            this.StatusColor = MudBlazor.Color.Dark;
             await InvokeAsync(StateHasChanged);
 
             string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal=--v");
@@ -106,16 +106,16 @@ public partial class Index : ComponentBase
 
             if (s.Contains("version"))
             {
-                this.StatusColor = "green";
+                this.StatusColor = MudBlazor.Color.Primary;
             }
             else
             {
-                this.StatusColor = "orange";
+                this.StatusColor = MudBlazor.Color.Warning;
             }
         }
         catch (Exception ex)
         {
-            this.StatusColor = "red";
+            this.StatusColor = MudBlazor.Color.Error;
             this.Output = DateTime.Now.ToLongTimeString() + "\r\nFailed\r\n" + ex.Message;
         }
         finally
@@ -134,7 +134,7 @@ public partial class Index : ComponentBase
                 this.Output = "Working...";
             }
 
-            this.StatusColor = "gray";
+            this.StatusColor = MudBlazor.Color.Dark;
             await InvokeAsync(StateHasChanged);
 
 
@@ -160,7 +160,7 @@ public partial class Index : ComponentBase
             string program = WebUtility.UrlEncode(orgProgram);
 
             string result = await Http.GetStringAsync($@"http://{ServiceIP}/?goal={WebUtility.UrlEncode(goal)}&program={program}");
-            this.StatusColor = "green";
+            this.StatusColor = MudBlazor.Color.Success;
             int errors = await this._astEditor.UpdateErrors(result);
             if (errors > 0 || printOutput)
             {
@@ -171,7 +171,7 @@ public partial class Index : ComponentBase
         }
         catch (Exception ex)
         {
-            this.StatusColor = "red";
+            this.StatusColor = MudBlazor.Color.Error;
             this.Output = DateTime.Now.ToLongTimeString() + "\r\nFailed\r\n" + ex.Message;
             return ex.Message;
         }
@@ -336,13 +336,13 @@ if (catch({test.Item1},_,writeln('{test.Item1}-'))) then writeln('{test.Item1}+'
                 program = WebUtility.UrlEncode(program);
                 string s = await Http.GetStringAsync($@"http://{ServiceIP}/?goal=--c&program={program}");
                 this.Output = DateTime.Now.ToLongTimeString() + "\r\n" + s;
-                this.StatusColor = "green";
+                this.StatusColor = MudBlazor.Color.Success;
                 _ = await this._astEditor.UpdateErrors(s);
             }
 
             catch (Exception ex)
             {
-                this.StatusColor = "red";
+                this.StatusColor = MudBlazor.Color.Error;
                 this._astEditor.ConsoleError(ex.Message);
             }
             finally

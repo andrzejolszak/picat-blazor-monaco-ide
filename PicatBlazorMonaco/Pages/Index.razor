@@ -2,7 +2,7 @@
 <label>
     Compiler Web Service IP:
     <input @bind="this.ServiceIP" />
-    <button @onclick="TestServiceConnection" style="background-color: @StatusColor">Test Connection</button>
+    <MudButton @onclick="TestServiceConnection" Variant="Variant.Filled" Color=this.StatusColor>Test Connection</MudButton>
 </label>
 <br />
 <select @onchange="SampleSelected">
@@ -26,14 +26,14 @@
             Goal:
             <input @bind="Goal" style="width:800px" @bind:event="oninput"
                    @onkeydown="RunKeyPress" />
-            <button @onclick="RunGoal">Run</button>
+            <MudButton @onclick="RunGoal">Run</MudButton>
         </label>
 
         <textarea @bind="Output" @ref="outputElement" @ondblclick="OutputDoubleClick" style="width:100%;height:200px" readonly="readonly" />
     </div>
     <div class="column right">
         Tests:
-        <button @onclick="RunAllTests">Run All</button>
+        <MudButton @onclick="RunAllTests">Run All</MudButton>
         <table>
             <tbody>
                 @foreach (var test in (_astEditor?.TestResults ?? new List<(string, bool?, int)>()).OrderBy(x => x.Item2).ThenBy(x => x.Item1))
