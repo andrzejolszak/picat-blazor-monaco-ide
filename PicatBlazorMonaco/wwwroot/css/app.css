@@ -77,6 +77,13 @@ a, .btn-link {
     font-weight: bold;
 }
 
+.whitespaceRedSquare {
+    background-color: rgba(245, 160, 60, 0.6);
+    border: solid .1em rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: inline-block;
+}
+
 .column {
     float: left;
     padding: 10px;

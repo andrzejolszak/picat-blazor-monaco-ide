@@ -1,5 +1,6 @@
 ﻿using BlazorMonaco;
 using BlazorMonaco.Editor;
+using BlazorMonaco.Languages;
 using IntervalTree;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
@@ -53,8 +54,62 @@ namespace Ast2
             _model = await _monacoEditor.GetModel();
             await _model.PushEOL(EndOfLineSequence.CRLF);
             await _jsRuntime.InvokeVoidAsync(@"initializePicat");
+
             await BlazorMonaco.Languages.Global.RegisterCompletionItemProvider(_jsRuntime, "picat", async (modelUri, position, context) => _completionList);
             await RefreshCompletions();
+
+            var markers = new List<MarkerData>
+            {
+                new() {
+                    CodeAsObject = new MarkerCode
+                    {
+                        TargetUri = "https://www.google.com",
+                        Value = "my-value"
+                    },
+                    Message = "Marker example",
+                    Severity = MarkerSeverity.Hint,
+                    StartLineNumber = 4,
+                    StartColumn = 3,
+                    EndLineNumber = 4,
+                    EndColumn = 7
+                }
+            };
+
+            await BlazorMonaco.Editor.Global.SetModelMarkers(_jsRuntime, _model, "default", markers);
+
+            await BlazorMonaco.Languages.Global.RegisterCodeActionProvider(_jsRuntime, "picat", async (modelUri, range, context) =>
+            {
+                var codeActionList = new CodeActionList();
+                if (context.Markers.Count == 0)
+                    return codeActionList;
+
+                codeActionList.Actions =
+                [
+                    new CodeAction
+                    {
+                        Title = "Fix test",
+                        Kind = "quickfix",
+                        Diagnostics = markers,
+                        Edit = new WorkspaceEdit
+                        {
+                            Edits =
+                            [
+                                new WorkspaceTextEdit
+                                {
+                                    ResourceUri = modelUri,
+                                    TextEdit = new TextEditWithOptions
+                                    {
+                                        Range = range,
+                                        Text = "THIS"
+                                    }
+                                }
+                            ]
+                        },
+                        IsPreferred = true
+                    }
+                ];
+                return codeActionList;
+            });
 
             this._logger?.LogInformation("Ast2Editor initialized!");
         }
@@ -209,7 +264,7 @@ namespace Ast2
                         Range = new BlazorMonaco.Range { StartColumn = pos.Column, StartLineNumber = pos.LineNumber, EndColumn = pos.Column + decl.Name.Length, EndLineNumber = pos.LineNumber },
                         Options = new ModelDecorationOptions
                         {
-                            InlineClassName = "declarationDecoration",
+                            InlineClassName = "declarationDecoration,whitespaceRedSquare",
                             HoverMessage = new[] { new MarkdownString { Value = decl.Name + "/" + decl.Args.Count } },
                             Minimap = new ModelDecorationMinimapOptions { Color = "royalblue" },
                             OverviewRuler = new ModelDecorationOverviewRulerOptions { Color = "royalblue" }

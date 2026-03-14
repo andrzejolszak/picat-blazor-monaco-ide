@@ -58,6 +58,113 @@
                 }
             });
 
+            monaco.editor.addCommand(
+                {
+                    id: "777",
+                    run: function (s, ...args)
+                    {
+                        alert("lens action executing: " + args);
+                    }
+                });
+
+            monaco.languages.registerCodeLensProvider("picat", {
+                provideCodeLenses: function (model, token) {
+                    return {
+                        lenses: [
+                            {
+                                range: {
+                                    startLineNumber: 1,
+                                    startColumn: 1,
+                                    endLineNumber: 2,
+                                    endColumn: 1,
+                                },
+                                id: "First Line",
+                                command: {
+                                    id: "777",
+                                    arguments: [112, 211],
+                                    title: "First Line Title",
+                                },
+                            },
+                        ],
+                        dispose: () => { },
+                    };
+                },
+
+                resolveCodeLens: function (model, codeLens, token) {
+                    return codeLens;
+                },
+            });
+
+            monaco.languages.registerInlayHintsProvider("picat", {
+                provideInlayHints(model, range, token) {
+                    return {
+                        hints: [
+                            {
+                                kind: 1,
+                                position: { column: 13, lineNumber: 4 },
+                                label: `: Number`,
+                                tooltip: `tooltip`
+                            },
+                            {
+                                kind: 2,
+                                position: { column: 18, lineNumber: 4 },
+                                label: `a:`,
+                            },
+                            {
+                                kind: 2,
+                                position: { column: 21, lineNumber: 4 },
+                                label: `b:`,
+                                whitespaceAfter: true, // similar to whitespaceBefore
+                            },
+                        ],
+                        dispose: () => { },
+                    };
+                },
+            });
+
+            monaco.languages.registerSignatureHelpProvider("picat", {
+                signatureHelpTriggerCharacters: ["(", ","],
+                provideSignatureHelp(model, position, token, context) {
+                    return {
+                        value:
+                        {
+                            activeParameter: 0,
+                            activeSignature: 0,
+                            signatures: [
+                                {
+                                    activeParameter: 0,
+                                    documentation: "docs1",
+                                    label: "label1",
+                                    parameters: [
+                                        { documentation: "doc1", label: "label1" },
+                                        { documentation: "doc2", label: "label2" }
+                                    ]
+                                }],
+                        },
+                        dispose: () => { },
+                    };
+                },
+            });
+
+            monaco.languages.registerReferenceProvider(
+                "picat",
+                {
+                    provideReferences: async (model, position, context, token) => {
+                        var defRange = await window.dotNetHelper.invokeMethodAsync('GetDefinitionRange', position);
+                        if (!defRange) {
+                            return null;
+                        }
+                        console.log('provideReferences', defRange);
+                        return
+                        [
+                            {
+                                uri: model.uri,
+                                range: defRange
+                            }
+                        ];
+                    }
+                });
+
             // Register a tokens provider for the language
             monaco.languages.setMonarchTokensProvider('picat', {
                 // Set defaultToken to invalid to see what you do not tokenize yet
