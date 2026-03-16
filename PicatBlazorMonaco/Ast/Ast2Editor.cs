@@ -267,7 +267,8 @@ namespace Ast2
                             InlineClassName = "declarationDecoration,whitespaceRedSquare",
                             HoverMessage = new[] { new MarkdownString { Value = decl.Name + "/" + decl.Args.Count } },
                             Minimap = new ModelDecorationMinimapOptions { Color = "royalblue" },
-                            OverviewRuler = new ModelDecorationOverviewRulerOptions { Color = "royalblue" }
+                            OverviewRuler = new ModelDecorationOverviewRulerOptions { Color = "royalblue" },
+                            Before = new InjectedTextOptions { Content = "[Test] " }
                         }
                     };
 

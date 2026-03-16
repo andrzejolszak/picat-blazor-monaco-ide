@@ -60,10 +60,10 @@
 
             monaco.editor.addCommand(
                 {
-                    id: "777",
-                    run: function (s, ...args)
+                    id: "__picat__lens_command",
+                    run: function (s, lensType, startLine, startColumn)
                     {
-                        alert("lens action executing: " + args);
+                        alert("lens action executing: " + [lensType, startLine, startColumn]);
                     }
                 });
 
@@ -74,52 +74,32 @@
                             {
                                 range: {
                                     startLineNumber: 1,
-                                    startColumn: 1,
-                                    endLineNumber: 2,
-                                    endColumn: 1,
+                                    startColumn: 2,
+                                    endLineNumber: 1,
+                                    endColumn: 3,
                                 },
-                                id: "First Line",
                                 command: {
-                                    id: "777",
-                                    arguments: [112, 211],
+                                    id: "__picat__lens_command",
+                                    arguments: [777, 1, 2],
                                     title: "First Line Title",
                                 },
                             },
-                        ],
-                        dispose: () => { },
+                            {
+                                range: {
+                                    startLineNumber: 2,
+                                    startColumn: 3,
+                                    endLineNumber: 2,
+                                    endColumn: 4,
+                                },
+                                command: {
+                                    id: "__picat__lens_command",
+                                    arguments: [888, 2, 3],
+                                    title: "First Line Title2",
+                                },
+                            },
+                        ]
                     };
-                },
-
-                resolveCodeLens: function (model, codeLens, token) {
-                    return codeLens;
-                },
-            });
-
-            monaco.languages.registerInlayHintsProvider("picat", {
-                provideInlayHints(model, range, token) {
-                    return {
-                        hints: [
-                            {
-                                kind: 1,
-                                position: { column: 13, lineNumber: 4 },
-                                label: `: Number`,
-                                tooltip: `tooltip`
-                            },
-                            {
-                                kind: 2,
-                                position: { column: 18, lineNumber: 4 },
-                                label: `a:`,
-                            },
-                            {
-                                kind: 2,
-                                position: { column: 21, lineNumber: 4 },
-                                label: `b:`,
-                                whitespaceAfter: true, // similar to whitespaceBefore
-                            },
-                        ],
-                        dispose: () => { },
-                    };
-                },
+                }
             });
 
             monaco.languages.registerSignatureHelpProvider("picat", {
@@ -128,20 +108,19 @@
                     return {
                         value:
                         {
-                            activeParameter: 0,
+                            activeParameter: 1,
                             activeSignature: 0,
                             signatures: [
                                 {
-                                    activeParameter: 0,
-                                    documentation: "docs1",
-                                    label: "label1",
+                                    activeParameter: 1,
+                                    documentation: "sig0 is a method",
+                                    label: "foo(p0, p1)",
                                     parameters: [
-                                        { documentation: "doc1", label: "label1" },
-                                        { documentation: "doc2", label: "label2" }
+                                        { documentation: "param 0 is..", label: "p0" },
+                                        { documentation: "param 1 is..", label: "p1" }
                                     ]
                                 }],
-                        },
-                        dispose: () => { },
+                        }
                     };
                 },
             });
@@ -150,18 +129,19 @@
                 "picat",
                 {
                     provideReferences: async (model, position, context, token) => {
-                        var defRange = await window.dotNetHelper.invokeMethodAsync('GetDefinitionRange', position);
-                        if (!defRange) {
-                            return null;
-                        }
-                        console.log('provideReferences', defRange);
-                        return
-                        [
+                        const result = [];
+                        result.push(
                             {
                                 uri: model.uri,
-                                range: defRange
-                            }
-                        ];
+                                range: {
+                                    startLineNumber: 1,
+                                    startColumn: 1,
+                                    endLineNumber: 1,
+                                    endColumn: 2,
+                                }
+                            });
+
+                        return result;
                     }
                 });
 
