@@ -43,107 +43,82 @@
             monaco.languages.register({ id: 'picat' });
 
             // BlazorMonaco does not provide definition providers yet - need to register manually via JS:
-            monaco.languages.registerDefinitionProvider('picat', {
-                provideDefinition: async (model, position, token) => {
-                    var defRange = await window.dotNetHelper.invokeMethodAsync('GetDefinitionRange', position);
-                    if (!defRange) {
-                        return null;
-                    }
-                    else {
+            monaco.languages.registerDefinitionProvider(
+                'picat',
+                {
+                    provideDefinition: async (model, position, token) => {
+                        var defRange = await window.dotNetHelper.invokeMethodAsync('JsGetDefinitionRange', position);
+                        if (!defRange) {
+                            return null;
+                        }
+
                         return {
                             uri: model.uri,
                             range: defRange
                         }
                     }
-                }
-            });
-
-            monaco.editor.addCommand(
-                {
-                    id: "__picat__lens_command",
-                    run: function (s, lensType, startLine, startColumn)
-                    {
-                        alert("lens action executing: " + [lensType, startLine, startColumn]);
-                    }
                 });
 
-            monaco.languages.registerCodeLensProvider("picat", {
-                provideCodeLenses: function (model, token) {
-                    return {
-                        lenses: [
-                            {
-                                range: {
-                                    startLineNumber: 1,
-                                    startColumn: 2,
-                                    endLineNumber: 1,
-                                    endColumn: 3,
-                                },
-                                command: {
-                                    id: "__picat__lens_command",
-                                    arguments: [777, 1, 2],
-                                    title: "First Line Title",
-                                },
-                            },
-                            {
-                                range: {
-                                    startLineNumber: 2,
-                                    startColumn: 3,
-                                    endLineNumber: 2,
-                                    endColumn: 4,
-                                },
-                                command: {
-                                    id: "__picat__lens_command",
-                                    arguments: [888, 2, 3],
-                                    title: "First Line Title2",
-                                },
-                            },
-                        ]
-                    };
-                }
-            });
-
-            monaco.languages.registerSignatureHelpProvider("picat", {
-                signatureHelpTriggerCharacters: ["(", ","],
-                provideSignatureHelp(model, position, token, context) {
-                    return {
-                        value:
-                        {
-                            activeParameter: 1,
-                            activeSignature: 0,
-                            signatures: [
-                                {
-                                    activeParameter: 1,
-                                    documentation: "sig0 is a method",
-                                    label: "foo(p0, p1)",
-                                    parameters: [
-                                        { documentation: "param 0 is..", label: "p0" },
-                                        { documentation: "param 1 is..", label: "p1" }
-                                    ]
-                                }],
-                        }
-                    };
-                },
-            });
-
+            // References
             monaco.languages.registerReferenceProvider(
                 "picat",
                 {
                     provideReferences: async (model, position, context, token) => {
                         const result = [];
-                        result.push(
-                            {
-                                uri: model.uri,
-                                range: {
-                                    startLineNumber: 1,
-                                    startColumn: 1,
-                                    endLineNumber: 1,
-                                    endColumn: 2,
-                                }
-                            });
+
+                        var refs = await window.dotNetHelper.invokeMethodAsync('JsGetReferences', position);
+                        refs.forEach((element) => result.push({ uri: model.uri, range: element }));
 
                         return result;
                     }
                 });
+
+            // Lenses
+            monaco.editor.addCommand(
+                {
+                    id: "__picat__lens_command",
+                    run: async function (s, lensType, startLine, startColumn)
+                    {
+                        await window.dotNetHelper.invokeMethodAsync('JsLensActionInvoke', lensType, startLine, startColumn);
+                    }
+                });
+
+            monaco.languages.registerCodeLensProvider("picat", {
+                provideCodeLenses: async function (model, token) {
+                    const result = [];
+
+                    var lenses = await window.dotNetHelper.invokeMethodAsync('JsGetLenses');
+                    lenses.forEach((element) => result.push(
+                        {
+                            range: element.range,
+                            command: {
+                                id: "__picat__lens_command",
+                                arguments: [element.lensType, element.range.startLineNumber, element.range.startColumn],
+                                title: element.text,
+                            }
+                        }));
+
+                    return { lenses: result };
+                }
+            });
+
+            // Signature help
+            monaco.languages.registerSignatureHelpProvider("picat", {
+                signatureHelpTriggerCharacters: ["(", ","],
+                provideSignatureHelp: async function (model, position, token, context) {
+                    var sigHelp = await window.dotNetHelper.invokeMethodAsync('JsGetSignatureHelp', position);
+
+                    return {
+                        value:
+                        {
+                            activeParameter: sigHelp.activeParameter,
+                            activeSignature: sigHelp.activeSignature,
+                            signatures: sigHelp.signatures
+                        },
+                        dispose: () => { }
+                    };
+                },
+            });
 
             // Register a tokens provider for the language
             monaco.languages.setMonarchTokensProvider('picat', {

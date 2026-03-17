@@ -8,7 +8,9 @@ using PicatBlazorMonaco.Ast;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace Ast2
 {
@@ -25,7 +27,9 @@ namespace Ast2
 
         private string[] _currentBuiltinReferenceDecors;
 
-        private IntervalTree<int, DeclarationParser.Reference> _currentReferences = new IntervalTree<int, DeclarationParser.Reference>();
+        private IntervalTree<int, DeclarationParser.Reference> _currentReferencesIntervalTree = new IntervalTree<int, DeclarationParser.Reference>();
+
+        private IntervalTree<int, DeclarationParser.Declaration> _currentDeclarationsIntervalTree = new IntervalTree<int, DeclarationParser.Declaration>();
 
         public List<(string, bool?, int)> TestResults = new List<(string, bool?, int)>();
 
@@ -142,7 +146,7 @@ namespace Ast2
         public async Task<BlazorMonaco.Range> GetDefinition(Position pos)
         {
             int offset = await this._model.GetOffsetAt(pos);
-            DeclarationParser.Reference reff = this._currentReferences.Query(offset).FirstOrDefault();
+            DeclarationParser.Reference reff = this._currentReferencesIntervalTree.Query(offset).FirstOrDefault();
             if (reff != null)
             {
                 Position p = await this._model.GetPositionAt(reff.FirstMatch.NameOffset);
@@ -152,6 +156,41 @@ namespace Ast2
             {
                 return null;
             }
+        }
+
+        public async Task<List<BlazorMonaco.Range>> GetReferences(Position pos)
+        {
+            List<BlazorMonaco.Range> res = new List<BlazorMonaco.Range>();
+
+            int offset = await this._model.GetOffsetAt(pos);
+
+            string name = null;
+            int paramCount = 0;
+
+            DeclarationParser.Reference reff = this._currentReferencesIntervalTree.Query(offset).FirstOrDefault();
+            name = reff?.FirstMatch?.Name;
+            paramCount = reff?.FirstMatch?.Args.Count ?? 0;
+
+            if (name is null)
+            {
+                DeclarationParser.Declaration decl = this._currentDeclarationsIntervalTree.Query(offset).FirstOrDefault();
+                name = decl?.Name;
+                paramCount = decl?.Args.Count ?? 0;
+            }
+
+            if (name is not null)
+            {
+                foreach (DeclarationParser.Reference r in this._currentReferencesIntervalTree.Values)
+                {
+                    if (r.FirstMatch?.Name == name && r.FirstMatch?.Args.Count == paramCount)
+                    {
+                        Position p = await this._model.GetPositionAt(r.NameOffset);
+                        res.Add(new BlazorMonaco.Range(p.LineNumber, p.Column, p.LineNumber, p.Column + r.FirstMatch.Name.Length));
+                    }
+                }
+            }
+
+            return res;
         }
 
         public async Task<int> GetCurrentEditorControlPositionStart()
@@ -255,6 +294,7 @@ namespace Ast2
             this.TestResults.Clear();
             try
             {
+                this._currentDeclarationsIntervalTree.Clear();
                 this.Declarations = DeclarationParser.ParseDeclarations(program);
                 foreach (DeclarationParser.Declaration decl in this.Declarations)
                 {
@@ -278,6 +318,8 @@ namespace Ast2
                     {
                         this.TestResults.Add((decl.Name, null, decl.NameOffset));
                     }
+
+                    this._currentDeclarationsIntervalTree.Add(decl.NameOffset, decl.NameOffset + decl.Name.Length, decl);
                 }
 
                 references = DeclarationParser.ParseReferences(program, this.Declarations);
@@ -287,10 +329,10 @@ namespace Ast2
                 this._currentDeclarationDecors = await _monacoEditor.DeltaDecorations(this._currentDeclarationDecors, decors.ToArray());
             }
 
-            this._currentReferences.Clear();
+            this._currentReferencesIntervalTree.Clear();
             foreach (DeclarationParser.Reference reff in references)
             {
-                this._currentReferences.Add(reff.NameOffset, reff.NameOffset + reff.FirstMatch.Name.Length, reff);
+                this._currentReferencesIntervalTree.Add(reff.NameOffset, reff.NameOffset + reff.FirstMatch.Name.Length, reff);
             }
 
             // Built-in refences for hover
@@ -352,13 +394,13 @@ namespace Ast2
 
             foreach ((string, string, string) o in BuiltIns.Functions)
             {
-                BlazorMonaco.Languages.CompletionItem i = new BlazorMonaco.Languages.CompletionItem
+                CompletionItem i = new CompletionItem
                 {
                     LabelAsString = o.Item1,
                     InsertText = o.Item1,
                     Detail = "[" + o.Item2 + "]",
                     DocumentationAsString = o.Item3,
-                    Kind = BlazorMonaco.Languages.CompletionItemKind.Function,
+                    Kind = CompletionItemKind.Function,
                 };
 
                 completionList.Suggestions.Add(i);
@@ -378,19 +420,70 @@ namespace Ast2
                     target = $"{d.Name}({string.Join(", ", d.Args)})";
                 }
 
-                BlazorMonaco.Languages.CompletionItem i = new BlazorMonaco.Languages.CompletionItem
+                CompletionItem i = new CompletionItem
                 {
                     LabelAsString = target,
                     InsertText = target,
                     Detail = "[User]",
                     DocumentationAsString = target + "\r\n\r\n" + d.Comment,
-                    Kind = BlazorMonaco.Languages.CompletionItemKind.Value,
+                    Kind = CompletionItemKind.Value,
                 };
 
                 completionList.Suggestions.Add(i);
             }
 
             this._completionList = completionList;
+        }
+
+        public async Task<List<(BlazorMonaco.Range Range, int LensType, string Text)>> GetLenses()
+        {
+            List<(BlazorMonaco.Range Range, int LensType, string Text)> lenses = new();
+
+            foreach (DeclarationParser.Declaration d in this.Declarations)
+            {
+                Position pos = await _model.GetPositionAt(d.NameOffset);
+                BlazorMonaco.Range range = new BlazorMonaco.Range { StartColumn = pos.Column, StartLineNumber = pos.LineNumber, EndColumn = pos.Column + d.Name.Length, EndLineNumber = pos.LineNumber };
+
+                lenses.Add((range, 676767, "Lens example: " + d.Name + "/" + d.Args.Count));
+            }
+
+            return lenses;
+        }
+
+        public async Task InvokeLensAction(int lensType, int startLine, int startColumn)
+        {
+            Console.WriteLine($"Lens action: {lensType} at {startLine}, {startColumn}");
+        }
+
+        public async Task<PicatBlazorMonaco.Pages.Index.JsSignatureHelpResponse> GetSingatureHelp(Position pos)
+        {
+            return new PicatBlazorMonaco.Pages.Index.JsSignatureHelpResponse
+            {
+                activeParameter = 1,
+                activeSignature = 0,
+                signatures = new PicatBlazorMonaco.Pages.Index.JsSignatureHelpResponse.JsSignatureHelpResponseSignature[]
+                {
+                    new PicatBlazorMonaco.Pages.Index.JsSignatureHelpResponse.JsSignatureHelpResponseSignature
+                    {
+                        activeParameter = 1,
+                        documentation = "sig doc",
+                        label = "sig label",
+                        parameters = new PicatBlazorMonaco.Pages.Index.JsSignatureHelpResponse.JsSignatureHelpResponseParam[]
+                        {
+                            new PicatBlazorMonaco.Pages.Index.JsSignatureHelpResponse.JsSignatureHelpResponseParam
+                            {
+                                documentation = "param doc 1",
+                                label = "parm label 1"
+                            },
+                            new PicatBlazorMonaco.Pages.Index.JsSignatureHelpResponse.JsSignatureHelpResponseParam
+                            {
+                                documentation = "param doc 2",
+                                label = "parm label 2"
+                            }
+                        }
+                    }
+                }
+            };
         }
     }
 }

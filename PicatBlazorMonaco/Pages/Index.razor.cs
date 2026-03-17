@@ -45,7 +45,50 @@ public partial class Index : ComponentBase
     public ILogger Logger { get; set; } = default!;
 
     [JSInvokable]
-    public async Task<BlazorMonaco.Range> GetDefinitionRange(Position pos) => await this._astEditor.GetDefinition(pos);
+    public async Task<BlazorMonaco.Range> JsGetDefinitionRange(Position pos) => await this._astEditor.GetDefinition(pos);
+
+    [JSInvokable]
+    public async Task<BlazorMonaco.Range[]> JsGetReferences(Position pos) => (await this._astEditor.GetReferences(pos)).ToArray();
+
+    public class JsGetLensesResponse
+    {
+        public BlazorMonaco.Range range { get; set; }
+        public int lensType { get; set; }
+        public string text { get; set; }
+    }
+
+    [JSInvokable]
+    public async Task<JsGetLensesResponse[]> JsGetLenses() => (await this._astEditor.GetLenses()).
+        Select(x => new JsGetLensesResponse { range = x.Range, lensType = x.LensType, text = x.Text })
+        .ToArray();
+
+    [JSInvokable]
+    public async Task JsLensActionInvoke(int lensType, int startLine, int startColumn) => await this._astEditor.InvokeLensAction(lensType, startLine, startColumn);
+
+    public class JsSignatureHelpResponse
+    {
+        public int? activeSignature { get; set; }
+        public int? activeParameter { get; set; }
+        public JsSignatureHelpResponseSignature[] signatures { get; set; }
+
+        public class JsSignatureHelpResponseSignature
+        {
+            public int? activeParameter { get; set; }
+            public string documentation { get; set; }
+            public string label { get; set; }
+            public JsSignatureHelpResponseParam[] parameters { get; set; }
+        }
+
+        public class JsSignatureHelpResponseParam
+        {
+            public string documentation { get; set; }
+            public string label { get; set; }
+
+        }
+    }
+
+    [JSInvokable]
+    public async Task<JsSignatureHelpResponse> JsGetSignatureHelp(Position pos) => await this._astEditor.GetSingatureHelp(pos);
 
     private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
     {
